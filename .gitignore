@@ -1,0 +1,8 @@
+**/node_modules/
+**/.env
+web/dist/
+backend/data/*.db
+backend/data/*.db-*
+backend/uploads/*
+!backend/uploads/.gitkeep
+mobile/.expo/

@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "LegalMetrix",
+    "slug": "legalmetrix",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.legalmetrix.mvp"
+    },
+    "ios": {
+      "bundleIdentifier": "com.legalmetrix.mvp"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow LegalMetrix to select package-label evidence.",
+          "cameraPermission": "Allow LegalMetrix to capture package-label evidence."
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}

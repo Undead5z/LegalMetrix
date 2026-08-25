@@ -1,0 +1,118 @@
+{
+  "measuredAt": "2026-08-24T11:10:22.936Z",
+  "aiUnavailableFallbackTested": true,
+  "clearImage": {
+    "product": "Demo Product A",
+    "processingMs": 5888,
+    "fieldsDetected": 12,
+    "fieldsTotal": 13,
+    "extractionSuccessPercent": 92.3,
+    "findingCounts": {
+      "PASS": 6
+    },
+    "reviewFindingCount": 0,
+    "totalFindingCount": 6,
+    "reviewRatePercent": 0,
+    "ocr": [
+      {
+        "state": "COMPLETED",
+        "confidencePercent": 93,
+        "quality": {
+          "width": 1400,
+          "height": 1800,
+          "ocrWidth": 3000,
+          "contrast": 23.6,
+          "orientation": 1
+        },
+        "reason": null
+      },
+      {
+        "state": "COMPLETED",
+        "confidencePercent": 94,
+        "quality": {
+          "width": 1400,
+          "height": 1800,
+          "ocrWidth": 3000,
+          "contrast": 27.3,
+          "orientation": 1
+        },
+        "reason": null
+      }
+    ]
+  },
+  "missingField": {
+    "product": "Demo Product B",
+    "processingMs": 3336,
+    "fieldsDetected": 10,
+    "fieldsTotal": 13,
+    "extractionSuccessPercent": 76.9,
+    "findingCounts": {
+      "PASS": 5,
+      "POTENTIAL_NON_COMPLIANCE": 1
+    },
+    "reviewFindingCount": 0,
+    "totalFindingCount": 6,
+    "reviewRatePercent": 0,
+    "ocr": [
+      {
+        "state": "COMPLETED",
+        "confidencePercent": 94,
+        "quality": {
+          "width": 1400,
+          "height": 1800,
+          "ocrWidth": 3000,
+          "contrast": 28.3,
+          "orientation": 1
+        },
+        "reason": null
+      }
+    ]
+  },
+  "poorImage": {
+    "product": "Demo Product C",
+    "processingMs": 263,
+    "fieldsDetected": 0,
+    "fieldsTotal": 13,
+    "extractionSuccessPercent": 0,
+    "findingCounts": {
+      "REVIEW_REQUIRED": 5,
+      "NOT_APPLICABLE": 1
+    },
+    "reviewFindingCount": 5,
+    "totalFindingCount": 6,
+    "reviewRatePercent": 83.3,
+    "ocr": [
+      {
+        "state": "RECAPTURE_RECOMMENDED",
+        "confidencePercent": 0,
+        "quality": {
+          "width": 260,
+          "height": 260,
+          "ocrWidth": 3000,
+          "contrast": 53.2,
+          "orientation": 1
+        },
+        "reason": "Image resolution is too low."
+      }
+    ]
+  },
+  "rotation": {
+    "ocrState": "COMPLETED",
+    "confidencePercent": 93,
+    "productNameDetected": true
+  },
+  "multipleImages": {
+    "tested": true,
+    "imageCount": 2
+  },
+  "report": {
+    "status": "GENERATED",
+    "pageCount": 4,
+    "bytes": 136836
+  },
+  "mobileToDashboardVisibility": {
+    "visible": true,
+    "dashboardTotalInspections": 4
+  },
+  "fallbackInspectionId": "5725408e-0bfb-4815-98e3-5cbbcb4efc71"
+}

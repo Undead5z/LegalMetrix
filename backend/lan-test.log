@@ -1,0 +1,32 @@
+
+> legalmetrix-backend@0.1.0 dev
+> node --watch src/server.js
+
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+[0mGET /api/health [32m200[0m 1.415 ms - 47[0m
+[0mPOST /api/auth/login [32m200[0m 219.897 ms - 404[0m
+[0mGET /api/health [32m200[0m 0.729 ms - 47[0m
+Failed running 'src/server.js'. Waiting for file changes before restarting...
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+Failed running 'src/server.js'. Waiting for file changes before restarting...
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Restarting 'src/server.js'
+LegalMetrix SQLite schema initialized and development users seeded.
+LegalMetrix backend listening on http://0.0.0.0:4000
+Failed running 'src/server.js'. Waiting for file changes before restarting...

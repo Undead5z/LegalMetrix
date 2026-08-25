@@ -1,0 +1,11 @@
+
+> legalmetrix-mobile@0.1.0 start
+> expo start --clear --lan
+
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+Starting project at C:\Users\aliku\OneDrive\1240515152103-Desktop\Desktop\LegalMetrix\mobile
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
