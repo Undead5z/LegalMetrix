@@ -7,7 +7,8 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "init-db": "node src/db/init.js",
-    "prepare-sih-demo": "node scripts/prepare-sih-demo.js"
+    "prepare-sih-demo": "node scripts/prepare-sih-demo.js",
+    "export-project-dataset": "node scripts/export-project-dataset.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

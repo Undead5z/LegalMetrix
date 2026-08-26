@@ -1,0 +1,2485 @@
+{
+  "datasetName": "LegalMetrix Project Inspection Dataset",
+  "generatedAt": "2026-08-26T09:22:24.081Z",
+  "source": "Current SQLite database records only",
+  "accuracyMethodology": {
+    "groundTruthAccuracyAvailable": false,
+    "groundTruthAccuracyPercent": null,
+    "reason": "The database contains extraction confidence and officer decisions, but no field-by-field verified ground-truth labels. Confidence is not equivalent to accuracy.",
+    "confidenceLevels": {
+      "HIGH_CONFIDENCE": "85% or higher",
+      "MEDIUM_CONFIDENCE": "65% to 84.9%",
+      "LOW_CONFIDENCE": "0.1% to 64.9%",
+      "NOT_DETECTED": "0%"
+    }
+  },
+  "measuredProjectMetrics": {
+    "inspections": 11,
+    "reports": 10,
+    "images": 27,
+    "declarations": 143,
+    "findings": 66,
+    "detectedDeclarations": 79,
+    "declarationFieldCoveragePercent": 55.2,
+    "meanDetectedOutputConfidencePercent": 78.8,
+    "meanImageOcrConfidencePercent": 38.3,
+    "extractionSourceCounts": {
+      "HYBRID": 3,
+      "DETERMINISTIC": 10,
+      "REVIEW_REQUIRED": 12,
+      "OCR_DETECTED": 18,
+      "NOT_DETECTED": 58,
+      "HYBRID_CONFIRMED": 9,
+      "VISION_ASSISTED": 33
+    },
+    "findingStatusCounts": {
+      "REVIEW_REQUIRED": 32,
+      "PASS": 31,
+      "NOT_APPLICABLE": 2,
+      "POTENTIAL_NON_COMPLIANCE": 1
+    },
+    "reportStatusCounts": {
+      "GENERATED": 10
+    }
+  },
+  "inspections": [
+    {
+      "inspectionNumber": "LM-2026-7E037FD2",
+      "product": {
+        "name": "Nycil Germ Expert Cool Herbal",
+        "category": "Prickly Heat Powder",
+        "brand": "Nycil"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-24 13:43:20",
+      "imageSummary": {
+        "count": 3,
+        "ocrStatusCounts": {
+          "COMPLETED": 3
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 3
+        },
+        "meanOcrConfidencePercent": 32,
+        "minimumOcrConfidencePercent": 29
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 10,
+        "fieldCoveragePercent": 76.9,
+        "meanDetectedOutputConfidencePercent": 77,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 3,
+          "PASS": 3
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "PRICKLY HEAT POWDER",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": "Brand name 'nycil' and product variant 'GERM+ EXPERT COOL HERBAL' printed in the central region of the front label."
+        },
+        {
+          "field": "manufacturer",
+          "value": "Phama Chem Equipment",
+          "outputConfidencePercent": 47.1,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "py \\ I py Haridwar - 249403, Utaratfon i",
+          "outputConfidencePercent": 47.6,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": "60 g",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'NET QUANTITY: 60 g' printed in the middle section of the back label."
+        },
+        {
+          "field": "mrp",
+          "value": "₹75.00",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Total retail price 'Rs. 75.00' printed on the bottom of the bottle."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "03/2025",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "First date '03/2025' printed on the bottom of the bottle next to a second date '02/2028'."
+        },
+        {
+          "field": "best_before",
+          "value": "02/2028",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Second date '02/2028' printed on the bottom of the bottle next to the first date '03/2025'."
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800 120 6668",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Toll-free number '1800 120 6668' printed in the consumer care section of the back label."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "customercare@zyduswellness.com",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Email address 'customercare@zyduswellness.com' printed in the consumer care section of the back label."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": "(Rs. 1.25 Per g)",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Price per unit '(Rs. 1.25 Per g)' printed adjacent to the MRP on the bottom of the bottle."
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 47.1,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:18"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:19"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:20"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:21"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:22"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:25:22"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-3E72704E",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-24 14:32:11",
+          "createdAt": "2026-08-24 14:32:11"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-FF6CA1E2",
+      "product": {
+        "name": "Candid Dusting Powder",
+        "category": "Itching Powder",
+        "brand": "Candid"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-24 14:36:35",
+      "imageSummary": {
+        "count": 3,
+        "ocrStatusCounts": {
+          "COMPLETED": 3
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 3
+        },
+        "meanOcrConfidencePercent": 38.7,
+        "minimumOcrConfidencePercent": 29
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 7,
+        "fieldCoveragePercent": 53.8,
+        "meanDetectedOutputConfidencePercent": 75.7,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 2,
+          "PASS": 4
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "Dusting Powder",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer",
+          "value": "Glenmank",
+          "outputConfidencePercent": 38.5,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "or: Mahalaxmi Chambers, ] Ste., dG. W, Bhulabhai Desai Road, ’ 1 bo. PERO, FF The 84) or Mbai - 400 026, Maharashtr > 1 1 a",
+          "outputConfidencePercent": 48.2,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": "India",
+          "outputConfidencePercent": 63,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": "120 g",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "best_before",
+          "value": "48 months before Expiry",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800 123 5343",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_email",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "DETERMINISTIC",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 38.5,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:52"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:48"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:53"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 29,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:35"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:30"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 14:50:30"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-E7E2167F",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-24 14:50:58",
+          "createdAt": "2026-08-24 14:50:57"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-C5303C34",
+      "product": {
+        "name": "Cipla KETOCIP Cream",
+        "category": "Ointment",
+        "brand": "Cipla"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-24 15:20:49",
+      "imageSummary": {
+        "count": 3,
+        "ocrStatusCounts": {
+          "COMPLETED": 3
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 3
+        },
+        "meanOcrConfidencePercent": 38,
+        "minimumOcrConfidencePercent": 28
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 5,
+        "fieldCoveragePercent": 38.5,
+        "meanDetectedOutputConfidencePercent": 69,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "PASS": 4,
+          "REVIEW_REQUIRED": 2
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "KETOCIP Cream",
+          "outputConfidencePercent": 66.1,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer",
+          "value": "Metrocraft",
+          "outputConfidencePercent": 93,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "Bhatoli Kalan, Baddi, Dist. Solan (HP)-173 205 Kadam Marg, Lower Parel, Mumbai - 400 013 INDIA. |",
+          "outputConfidencePercent": 39.2,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": "15 g",
+          "outputConfidencePercent": 65,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "best_before",
+          "value": "MAY 27",
+          "outputConfidencePercent": 81.6,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_email",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "PASS",
+          "outputConfidencePercent": 93,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:33"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:39"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 81.6,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:40"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:41"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "PASS",
+          "outputConfidencePercent": 65,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:41"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "PASS",
+          "outputConfidencePercent": 66.1,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-24 16:24:42"
+        }
+      ],
+      "reports": []
+    },
+    {
+      "inspectionNumber": "LM-2026-996990DB",
+      "product": {
+        "name": "Hellmann's Mayonnaise",
+        "category": "Mayonnaise",
+        "brand": "Hellmann's"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-25 12:14:31",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 45.5,
+        "minimumOcrConfidencePercent": 35
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 10,
+        "fieldCoveragePercent": 76.9,
+        "meanDetectedOutputConfidencePercent": 88.3,
+        "outputConfidenceLevel": "HIGH_CONFIDENCE",
+        "findingStatusCounts": {
+          "PASS": 4,
+          "REVIEW_REQUIRED": 2
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "BRAND ERRY IRE",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": "Main brand logo and product name printed in the center of the front label, with 'VEG' highlighted in a green bar below."
+        },
+        {
+          "field": "manufacturer",
+          "value": "HINDUSTAN UNILEVER LTD.",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Listed under 'MFD. BY' in the manufacturer information block on the back of the packaging."
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "SYNTHITE TASTE PARK, XI 312B, PANCODE, NEAR KINFRA, ERNAKULAM DISTRICT, KERALA",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Address of the contract manufacturer (Synthite Products Ltd.) printed in the middle section of the back text."
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": "350 g",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Net weight explicitly stated as 'NET WEIGHT: 350 g' on the back label near the nutrition table and barcode."
+        },
+        {
+          "field": "mrp",
+          "value": "₹95",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Maximum Retail Price printed in the bottom margin as '₹95/-' followed by unit pricing '₹0.27/g'."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "06/05/26",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "First printed date code on the bottom edge of the back pouch, following the batch code 'SB617C'."
+        },
+        {
+          "field": "best_before",
+          "value": "05/05/27",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Second printed date code on the bottom edge of the back pouch, following the manufacturing date."
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800-120-2221",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Toll-free feedback/query number printed in the consumer care contact block on the back."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "ARE@UNILEVER.CO",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Email address printed directly below the toll-free number in the consumer care block."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": "₹0.27/g",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Price per unit gram printed adjacent to the total MRP on the bottom edge of the back label."
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:06"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:35"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:07"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:09"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:10"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-25 13:01:36"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-F27A9C8D",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-25 13:01:40",
+          "createdAt": "2026-08-25 13:01:40"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-67C4645D",
+      "product": {
+        "name": "Blood Pressure Monitor",
+        "category": "Medical Tech",
+        "brand": "Beurer Medical"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 08:43:41",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 57.5,
+        "minimumOcrConfidencePercent": 53
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 8,
+        "fieldCoveragePercent": 61.5,
+        "meanDetectedOutputConfidencePercent": 81.2,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 3,
+          "PASS": 3
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "x | BM 35 BP MONITOR & /, |",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Explicitly stated under 'PRODUCT NAME' in the information block on the back label."
+        },
+        {
+          "field": "manufacturer",
+          "value": "MONTH & YEAR OF 07/2021 OF [m]",
+          "outputConfidencePercent": 62,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": "= & MARKETED BY : BEURER INDIA PVT. LTD Mn, Germany :",
+          "outputConfidencePercent": 82.4,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": "of CHINA PRODUCTION CODE : 2021G42",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Explicitly declared as 'COUNTRY OF ORIGIN : CHINA' on the back sticker."
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": "₹2380.00",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed as 'MRP. : Rs.2380.00 (INCLUSIVE OF ALL TAXES)' on the back label."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "07/2021",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed as 'MONTH & YEAR OF MANUFACTURING : 07/2021' on the back label."
+        },
+        {
+          "field": "best_before",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800-208-8284",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed under 'CONTACT CUSTOMER CARE EXECUTIVE AT' on the back sticker."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "support@beurerindia.com",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed next to 'E-MAIL :' on the back label sticker."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 62,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:59"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:51"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:50"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:50"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 53,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:48"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:48:38"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-4D7BDF3F",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 08:49:14",
+          "createdAt": "2026-08-26 08:49:14"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-03DC2B04",
+      "product": {
+        "name": "Different Colored Ball Pen",
+        "category": "Pen",
+        "brand": "Hauser Germany"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 08:46:09",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 35,
+        "minimumOcrConfidencePercent": 33
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 4,
+        "fieldCoveragePercent": 30.8,
+        "meanDetectedOutputConfidencePercent": 64.3,
+        "outputConfidenceLevel": "LOW_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 3,
+          "PASS": 2,
+          "NOT_APPLICABLE": 1
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "INK COLOURS",
+          "outputConfidencePercent": 70.4,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "Vapi Road Daman -396210 s I :",
+          "outputConfidencePercent": 58,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": "3 NA wre: Rs. 100.00 rcare@hauserpen.in |",
+          "outputConfidencePercent": 37,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "best_before",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "rcare@hauserpen.in",
+          "outputConfidencePercent": 92,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 37,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:50:40"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 92,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:50:05"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "NOT_APPLICABLE",
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "officerDecision": "REJECTED",
+          "reviewedAt": "2026-08-26 08:50:03"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 33,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:50:31"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 33,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:50:10"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "PASS",
+          "outputConfidencePercent": 70.4,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:50:06"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-50C8FD24",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 08:50:48",
+          "createdAt": "2026-08-26 08:50:47"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-A390A795",
+      "product": {
+        "name": "Doms Color Pencils",
+        "category": "Color Pencils",
+        "brand": "Doms"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 08:51:40",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 35,
+        "minimumOcrConfidencePercent": 32
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 9,
+        "fieldCoveragePercent": 69.2,
+        "meanDetectedOutputConfidencePercent": 80.7,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 4,
+          "PASS": 2
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "EVERY AMBITION NEEDS PREPARATION",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": "Large text 'COLOUR PENCILS' printed in the lower middle section of the front packaging, below the illustration of the colorful houses."
+        },
+        {
+          "field": "manufacturer",
+          "value": "7 SoA 72 TI | and Marketed bv: | BDBDARIIAT. ~A AID DENT AAMT 52 Clee rr h |",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "J-19, G.I.D.C., UMBERGAON-396171, DIST. VALSAD, GUJARAT, INDIA.",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Address text printed directly below the manufacturer name 'DOMS INDUSTRIES LIMITED' in the bottom-left blue panel on the back of the box."
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": "INDIA",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "A 'MADE IN INDIA' logo/text block is visible in the bottom-left corner of the blue information panel on the back side."
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": "₹120.00",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'MRP: ₹ 120.00 (incl. of all taxes)' is printed in the top-right cell of the blue information table on the back of the box."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "MFD: 03/2025",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'MFD: 03/2025' is printed in the middle-right column of the blue information table, directly below the unit sale price."
+        },
+        {
+          "field": "best_before",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "7100001065",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'Tel: 1-800-2741250 (toll free)' is printed under the 'CONSUMER CARE CELL' section in the bottom-left blue panel."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "info@domsindia.com",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'E-mail: info@domsindia.com' is printed directly below the consumer care phone number in the bottom-left blue panel."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": "₹ 120.00 Per Set",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Text 'UNIT SALE PRICE: ₹ 120.00 Per Set' is printed in the middle-right column of the blue information table on the back of the box."
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:53:37"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:53:50"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:53:52"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:53:53"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 32,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:54:11"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:54:15"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-494DC352",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 08:54:20",
+          "createdAt": "2026-08-26 08:54:20"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-86DE3A25",
+      "product": {
+        "name": "Keya Pasta Masala",
+        "category": "Pasta Masala",
+        "brand": "Keya"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 08:57:03",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 37.5,
+        "minimumOcrConfidencePercent": 28
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 2,
+        "fieldCoveragePercent": 15.4,
+        "meanDetectedOutputConfidencePercent": 53,
+        "outputConfidenceLevel": "LOW_CONFIDENCE",
+        "findingStatusCounts": {
+          "PASS": 1,
+          "REVIEW_REQUIRED": 4,
+          "NOT_APPLICABLE": 1
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "TRE SRA REN RAR",
+          "outputConfidencePercent": 27,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer",
+          "value": "pr | — Be. Son Tomato Powder, Sugar, Com Flour, Hydrolyzed Vegetable Protein, Yeast ; ( :",
+          "outputConfidencePercent": 79,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "best_before",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "consumer_care_email",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "PASS",
+          "outputConfidencePercent": 79,
+          "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 08:59:46"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:00:20"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "NOT_APPLICABLE",
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:00:33"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:00:35"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 28,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:00:49"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 27,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:00:52"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-0BB2031C",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 09:00:56",
+          "createdAt": "2026-08-26 09:00:55"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-ABEE3FF1",
+      "product": {
+        "name": "Horlicks Powder",
+        "category": "Protein and growth Powder",
+        "brand": "Horlicks"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 09:03:48",
+      "imageSummary": {
+        "count": 2,
+        "ocrStatusCounts": {
+          "COMPLETED": 2
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 2
+        },
+        "meanOcrConfidencePercent": 34,
+        "minimumOcrConfidencePercent": 32
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 7,
+        "fieldCoveragePercent": 53.8,
+        "meanDetectedOutputConfidencePercent": 93.6,
+        "outputConfidenceLevel": "HIGH_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 2,
+          "PASS": 4
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "REPRESENTATION PURPOSE ONLY RDA",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": "Product brand name 'Horlicks' printed vertically in large white letters on the orange stripe, with 'CLASSIC MALT' and 'SUPER FOODS' visible in the central and upper regions of the front label."
+        },
+        {
+          "field": "manufacturer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": "17 g",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Net weight 'Per Pack (17 g)' is printed in the bottom-right corner of the front label, just above the calorie information."
+        },
+        {
+          "field": "mrp",
+          "value": "₹5.00",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Maximum retail price printed as '*MRP (Incl. of all taxes): Rs. 5.00' in the lower section of the back label, near the batch number instructions."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "27/07/26",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed vertically on the left seam of the back label: '16 27/07/26 20/05/27', representing the manufacturing/packing and expiry dates."
+        },
+        {
+          "field": "best_before",
+          "value": "20/05/27",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed vertically on the left seam of the back label following the manufacturing date, indicating the expiry/best before date."
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800-10-22-221",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Consumer care helpline number printed next to the Lever Care logo and address in the lower section of the back label."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "LEVER.CARE@UNILEVER.COM",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Email address printed directly below the consumer care phone number on the back of the packaging."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 32,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:14"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:15"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:16"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 100,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:17"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:18"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:08:18"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-24DE5A71",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 09:08:32",
+          "createdAt": "2026-08-26 09:08:32"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-28025D9E",
+      "product": {
+        "name": "Parle G Gluco Biscuit",
+        "category": "Biscuits",
+        "brand": "Parle"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 09:09:36",
+      "imageSummary": {
+        "count": 3,
+        "ocrStatusCounts": {
+          "COMPLETED": 3
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 3
+        },
+        "meanOcrConfidencePercent": 35,
+        "minimumOcrConfidencePercent": 31
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 10,
+        "fieldCoveragePercent": 76.9,
+        "meanDetectedOutputConfidencePercent": 78.5,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 3,
+          "PASS": 3
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "SHASHI SIDNAL FOODS PVT LTD",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Prominent red and white logo on the front face of the package reading 'Parle-G Gluco'."
+        },
+        {
+          "field": "manufacturer",
+          "value": "SC FOR: (ic bg:10013022002253 = - mv",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "LA BATLAGUNDY ROAD, NILAKOTTAI, TN - 624203 :",
+          "outputConfidencePercent": 26.6,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Address printed directly below the manufacturer's name on the back of the packaging."
+        },
+        {
+          "field": "packer",
+          "value": "ELVEETY PRODUCTS PVT LTD",
+          "outputConfidencePercent": 90,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Listed under 'MFD BY:' as the primary manufacturer/packer at 99/1A3, AGADI VILLAGE ROAD, AGADI HUBLI, DHARWAD, KA - 581207."
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": "₹5.00",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Maximum Retail Price printed on the back panel as 'MRP Rs 5.00 (Rs 0.13 / g) INCL. OF ALL TAXES'."
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "8/6/26",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed vertically on the right side of the back panel next to 'PKD:'."
+        },
+        {
+          "field": "best_before",
+          "value": "5/11/26",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed vertically on the right side of the back panel next to 'USE BY:'."
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "1800 209 6929",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Printed under the 'CONSUMER CARE CELL' section on the bottom flap: 'PHONE NO.: 1800 209 6929'."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "CS@PARLE.BIZ",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Printed next to the consumer care phone number as 'E-MAIL: CS@PARLE.BIZ'."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": "Rs 0.13 / g",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Unit price printed inside parentheses next to the total MRP: '(Rs 0.13 / g)'."
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 38,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:31"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:34"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:34"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "PASS",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:36"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 31,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:40"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:11:43"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-83B8B97E",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 09:11:47",
+          "createdAt": "2026-08-26 09:11:46"
+        }
+      ]
+    },
+    {
+      "inspectionNumber": "LM-2026-0F012E22",
+      "product": {
+        "name": "Sun Pure Sunflower Oil",
+        "category": "Cooking Oil",
+        "brand": "Sun Pure"
+      },
+      "inspectionStatus": "VERIFIED",
+      "createdAt": "2026-08-26 09:12:41",
+      "imageSummary": {
+        "count": 3,
+        "ocrStatusCounts": {
+          "COMPLETED": 3
+        },
+        "qualityStateCounts": {
+          "ACCEPTABLE": 3
+        },
+        "meanOcrConfidencePercent": 38.3,
+        "minimumOcrConfidencePercent": 32
+      },
+      "outputMetrics": {
+        "declarationSlots": 13,
+        "detectedDeclarations": 7,
+        "fieldCoveragePercent": 53.8,
+        "meanDetectedOutputConfidencePercent": 73.8,
+        "outputConfidenceLevel": "MEDIUM_CONFIDENCE",
+        "findingStatusCounts": {
+          "REVIEW_REQUIRED": 4,
+          "PASS": 1,
+          "POTENTIAL_NON_COMPLIANCE": 1
+        }
+      },
+      "declarations": [
+        {
+          "field": "product_name",
+          "value": "ECHNOLOGY VIET",
+          "outputConfidencePercent": 48.4,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "FRONT",
+          "visualEvidenceDescription": "Front panel displays the brand logo 'Sunpure' in large red and yellow letters, with the product description 'Physically Refined Sunflower Oil' printed in white below it."
+        },
+        {
+          "field": "manufacturer",
+          "value": "fag | 00 | 00 |. For Unit address & FSSA 0 :",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "NEEDS_REVIEW",
+          "extractionSource": "REVIEW_REQUIRED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "The back panel lists 'Marketed by: MK Agrotech Private Limited' near the top right, and 'MK Agrotech Pvt. Ltd.' under the consumer care section. No separate 'manufactured by' entity is explicitly visible, so the marketing entity is recorded here."
+        },
+        {
+          "field": "manufacturer_address",
+          "value": "AT . Srirangapatna-571 438, Mandya District, ~~ 7° £ 87",
+          "outputConfidencePercent": 32.9,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "extractionState": "LOW_CONFIDENCE",
+          "extractionSource": "OCR_DETECTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "packer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "importer",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "country_of_origin",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "net_quantity",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "mrp",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        },
+        {
+          "field": "manufacturing_or_packing_date",
+          "value": "04/AUG/2026",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Printed on the bottom sealing strip under 'Date of Packaging:' as '04/AUG/2026'."
+        },
+        {
+          "field": "best_before",
+          "value": "03/FEB/2027",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "ADDITIONAL",
+          "visualEvidenceDescription": "Printed on the bottom sealing strip under 'Use by:' as '03/FEB/2027'."
+        },
+        {
+          "field": "consumer_care_phone",
+          "value": "70907 19022, 99005 01986",
+          "outputConfidencePercent": 90,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "VISION_ASSISTED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed on the back panel under the 'For Consumer Feedback & Queries' section as 'Mob: 70907 19022, 99005 01986'."
+        },
+        {
+          "field": "consumer_care_email",
+          "value": "customercare@masoom.in",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "extractionState": "DETECTED",
+          "extractionSource": "HYBRID_CONFIRMED",
+          "sourceImageSide": "BACK",
+          "visualEvidenceDescription": "Printed on the back panel under the 'For Consumer Feedback & Queries' section as 'e-mail: customercare@masoom.in'."
+        },
+        {
+          "field": "unit_sale_price",
+          "value": null,
+          "outputConfidencePercent": 0,
+          "outputConfidenceLevel": "NOT_DETECTED",
+          "extractionState": "NOT_DETECTED",
+          "extractionSource": "NOT_DETECTED",
+          "sourceImageSide": null,
+          "visualEvidenceDescription": null
+        }
+      ],
+      "findings": [
+        {
+          "ruleCode": "LM-MVP-BUSINESS-INFO",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 60,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:15:23"
+        },
+        {
+          "ruleCode": "LM-MVP-CONSUMER-CARE",
+          "status": "PASS",
+          "outputConfidencePercent": 90,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:15:24"
+        },
+        {
+          "ruleCode": "LM-MVP-DATE",
+          "status": "POTENTIAL_NON_COMPLIANCE",
+          "outputConfidencePercent": 95,
+          "outputConfidenceLevel": "HIGH_CONFIDENCE",
+          "officerDecision": "REJECTED",
+          "reviewedAt": "2026-08-26 09:15:25"
+        },
+        {
+          "ruleCode": "LM-MVP-MRP",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 32,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:15:27"
+        },
+        {
+          "ruleCode": "LM-MVP-NET-QUANTITY",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 32,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:15:28"
+        },
+        {
+          "ruleCode": "LM-MVP-PRODUCT-NAME",
+          "status": "REVIEW_REQUIRED",
+          "outputConfidencePercent": 48.4,
+          "outputConfidenceLevel": "LOW_CONFIDENCE",
+          "officerDecision": "CONFIRMED",
+          "reviewedAt": "2026-08-26 09:15:29"
+        }
+      ],
+      "reports": [
+        {
+          "reportNumber": "LMR-2026-96AD89B3",
+          "status": "GENERATED",
+          "generatedAt": "2026-08-26 09:15:36",
+          "createdAt": "2026-08-26 09:15:36"
+        }
+      ]
+    }
+  ]
+}
