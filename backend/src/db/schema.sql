@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS inspections (
   vision_diagnostics_json TEXT,
   vision_cache_key TEXT,
   vision_completed_at TEXT,
+  admin_decision TEXT CHECK (admin_decision IN ('VERIFIED', 'POTENTIAL_ISSUE', 'PRODUCT_REJECTED')),
+  admin_decision_comment TEXT,
+  admin_decision_finding_id TEXT REFERENCES findings(id),
+  admin_decision_finding_ids_json TEXT,
+  admin_decided_by TEXT REFERENCES users(id),
+  admin_decided_at TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

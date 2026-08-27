@@ -13,19 +13,26 @@ function wrap(value, width = 92) {
   if (line) lines.push(line); return lines.length ? lines : ['-'];
 }
 function storedReportData(inspectionId) {
-  const inspection = db.prepare(`SELECT i.*, p.product_name, p.generic_name, p.brand_name, u.full_name AS officer_name, u.email AS officer_email
-    FROM inspections i JOIN products p ON p.id=i.product_id JOIN users u ON u.id=i.officer_id WHERE i.id=?`).get(inspectionId);
+  const inspection = db.prepare(`SELECT i.*, p.product_name, p.generic_name, p.brand_name, u.full_name AS officer_name, u.email AS officer_email, admin.full_name AS admin_decider_name,
+    selected_finding.status AS admin_decision_finding_status, selected_finding.message AS admin_decision_finding_message, selected_rule.rule_code AS admin_decision_rule_code
+    FROM inspections i JOIN products p ON p.id=i.product_id JOIN users u ON u.id=i.officer_id LEFT JOIN users admin ON admin.id=i.admin_decided_by
+    LEFT JOIN findings selected_finding ON selected_finding.id=i.admin_decision_finding_id LEFT JOIN rules selected_rule ON selected_rule.id=selected_finding.rule_id WHERE i.id=?`).get(inspectionId);
   if (!inspection) throw new Error('Inspection was not found for report generation.');
   const declarations = db.prepare(`SELECT d.*, img.image_type AS source_side FROM declarations d LEFT JOIN inspection_images img ON img.id=d.source_image_id WHERE d.inspection_id=? ORDER BY d.created_at`).all(inspectionId);
   const findings = db.prepare(`SELECT f.*, r.rule_code, r.legal_reference, r.version AS rule_version, reviewer.full_name AS reviewer_name
     FROM findings f LEFT JOIN rules r ON r.id=f.rule_id LEFT JOIN users reviewer ON reviewer.id=f.reviewed_by WHERE f.inspection_id=? ORDER BY f.created_at`).all(inspectionId);
   const images = db.prepare('SELECT * FROM inspection_images WHERE inspection_id=? ORDER BY created_at').all(inspectionId);
-  return { inspection, declarations, findings, images };
+  let selectedIds = [];
+  try { selectedIds = JSON.parse(inspection.admin_decision_finding_ids_json || '[]'); } catch { selectedIds = []; }
+  if (!Array.isArray(selectedIds) || !selectedIds.length) selectedIds = inspection.admin_decision_finding_id ? [inspection.admin_decision_finding_id] : [];
+  const byId = new Map(findings.map(finding => [finding.id, finding]));
+  const adminDecisionFindings = selectedIds.map(id => byId.get(id)).filter(Boolean);
+  return { inspection, declarations, findings, images, adminDecisionFindings }; 
 }
 function textLines(data, reportNumber) {
-  const { inspection: i, declarations, findings } = data; const lines = [];
+  const { inspection: i, declarations, findings, adminDecisionFindings } = data; const lines = [];
   const add = (label, value) => wrap(`${label}: ${value ?? '-'}`).forEach(line => lines.push(line));
-  lines.push('LEGALMETRIX - INSPECTION REPORT', ''); add('Report Number', reportNumber); add('Inspection ID', i.id); add('Inspection Number', i.inspection_number); add('Product', i.product_name); add('Category', i.generic_name || 'Not recorded'); add('Brand', i.brand_name || 'Not recorded'); add('Inspection Date/Time', `${i.created_at} UTC`); add('Officer', `${i.officer_name} (${i.officer_email})`); add('Inspection Status', i.state); add('Location', i.location || 'Not recorded'); lines.push('', 'EXTRACTED DECLARATIONS');
+  lines.push('LEGALMETRIX - INSPECTION REPORT', ''); add('Report Number', reportNumber); add('Inspection ID', i.id); add('Inspection Number', i.inspection_number); add('Product', i.product_name); add('Category', i.generic_name || 'Not recorded'); add('Brand', i.brand_name || 'Not recorded'); add('Inspection Date/Time', `${i.created_at} UTC`); add('Officer', `${i.officer_name} (${i.officer_email})`); add('Inspection Status', i.state); add('Administrator decision', i.admin_decision ? i.admin_decision.replace(/_/g, ' ') : 'Not decided'); if (adminDecisionFindings.length) add('Administrator decision basis', adminDecisionFindings.map(finding => `${finding.status} | ${finding.rule_code || 'Rule unavailable'} | ${finding.message}`).join(' || ')); if (i.admin_decider_name) add('Administrator decision by', `${i.admin_decider_name} at ${i.admin_decided_at || '-'}`); add('Location', i.location || 'Not recorded'); lines.push('', 'EXTRACTED DECLARATIONS');
   for (const d of declarations) { add(ascii(d.field_name).replace(/_/g, ' ').toUpperCase(), `${d.value || 'Not detected'} | Confidence ${Math.round((d.confidence || 0) * 100)}% | ${d.extraction_state || d.detection_state} | Source ${d.source_side || '-'} | Method ${d.extraction_source || d.extraction_method}`); if (d.ocr_evidence) add('OCR evidence', d.ocr_evidence); }
   lines.push('', 'AUTOMATED FINDINGS AND OFFICER VERIFICATION');
   for (const f of findings) { add('Finding', `${f.status} | ${f.message}`); add('Rule', `${f.rule_code || 'Unavailable'} | Version ${f.rule_version || '-'}`); add('Confidence', `${Math.round((f.confidence || 0) * 100)}%`); add('Verified legal reference', f.legal_reference && f.legal_reference !== 'LEGAL_REFERENCE_PENDING_VERIFICATION' ? f.legal_reference : 'No verified legal reference supplied'); add('Officer decision', f.officer_decision || 'Not reviewed'); if (f.reviewer_name) add('Reviewed by', `${f.reviewer_name} at ${f.reviewed_at || '-'}`); if (f.officer_comment) add('Officer comment', f.officer_comment); lines.push(''); }

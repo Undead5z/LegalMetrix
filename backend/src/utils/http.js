@@ -12,7 +12,8 @@ const notFound = (req, res) => {
 
 const errorHandler = (err, req, res, next) => {
   if (err.name === 'MulterError') {
-    return res.status(400).json({ error: { code: 'UPLOAD_ERROR', message: err.message } });
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'Each image must be 10 MB or smaller.' : err.message;
+    return res.status(400).json({ error: { code: 'UPLOAD_ERROR', message } });
   }
   const statusCode = err.statusCode || 500;
   if (statusCode >= 500) console.error(err);

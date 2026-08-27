@@ -20,5 +20,6 @@ function requireApprovedAccount(req, res, next) {
 }
 function allowRoles(...roles) { return (req, res, next) => roles.includes(req.user.role) ? next() : next(new AppError(403, 'You do not have permission to perform this action.')); }
 const requireAdmin = allowRoles(...ADMIN_ROLES);
+const requireFieldOfficer = allowRoles('FIELD_OFFICER');
 const requireFieldOrAdmin = allowRoles('FIELD_OFFICER', ...ADMIN_ROLES);
-module.exports = { requireAuth, requireApprovedAccount, allowRoles, requireAdmin, requireFieldOrAdmin, ADMIN_ROLES };
+module.exports = { requireAuth, requireApprovedAccount, allowRoles, requireAdmin, requireFieldOfficer, requireFieldOrAdmin, ADMIN_ROLES };

@@ -1,17 +1,56 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { request } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { StatusBadge } from '../components/StatusBadge';
 import { EmptyState } from '../components/EmptyState';
 
-const initial = { productName: '', genericName: '', brandName: '', location: '', notes: '' };
+const filterKeys = ['search', 'state', 'issue', 'from', 'to'];
+const displayStatus = inspection => inspection.admin_decision === 'PRODUCT_REJECTED' ? 'PRODUCT_REJECTED' : inspection.admin_decision === 'POTENTIAL_ISSUE' ? 'POTENTIAL_ISSUE' : inspection.state;
+function issueSummary(inspection) {
+  if (inspection.potential_issues_count) {
+    const label = String(inspection.potential_issue_summary || 'Issue').split(' · ')[0].replace(/\s+declaration$/i, '');
+    return `${inspection.potential_issues_count} potential issue${inspection.potential_issues_count === 1 ? '' : 's'}: ${label}`;
+  }
+  return inspection.admin_decision === 'PRODUCT_REJECTED' || inspection.admin_decision === 'POTENTIAL_ISSUE' ? 'Admin-marked potential issue' : 'No potential issues';
+}
+
 export function InspectionsPage() {
-  const { token } = useAuth(); const navigate = useNavigate(); const [items, setItems] = useState([]); const [filters, setFilters] = useState({ search: '', state: '', from: '', to: '' }); const [form, setForm] = useState(initial); const [open, setOpen] = useState(false); const [error, setError] = useState(''); const [saving, setSaving] = useState(false);
-  const load = () => { const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value)); return request(`/inspections?${query}`, { token }).then(x => setItems(x.inspections)).catch(e => setError(e.message)); };
-  useEffect(() => { load(); }, [token, filters.search, filters.state, filters.from, filters.to]);
-  async function create(event) { event.preventDefault(); setSaving(true); setError(''); try { const { inspection } = await request('/inspections', { token, method: 'POST', body: form }); navigate(`/inspections/${inspection.id}`); } catch (e) { setError(e.message); } finally { setSaving(false); } }
-  return <><section className="page-heading"><div><span className="eyebrow">INSPECTION REPOSITORY</span><h2>Inspections</h2><p>Create, retrieve, and continue field inspection records.</p></div><button className="button button--gold" onClick={() => setOpen(!open)}>{open ? 'Close form' : 'New inspection'}</button></section>{error && <p className="form-error">{error}</p>}
-  {open && <section className="panel form-panel"><h3>New inspection</h3><form className="form-grid" onSubmit={create}><label>Product / commodity name<input required value={form.productName} onChange={e => setForm({...form, productName:e.target.value})}/></label><label>Generic name<input value={form.genericName} onChange={e => setForm({...form, genericName:e.target.value})}/></label><label>Brand name<input value={form.brandName} onChange={e => setForm({...form, brandName:e.target.value})}/></label><label>Inspection location<input value={form.location} onChange={e => setForm({...form, location:e.target.value})}/></label><label className="wide">Officer notes<textarea value={form.notes} onChange={e => setForm({...form, notes:e.target.value})}/></label><button className="button button--gold" disabled={saving}>{saving ? 'Creating…' : 'Create inspection'}</button></form></section>}
-  <section className="panel form-panel"><div className="form-grid"><label>Search<input value={filters.search} onChange={e => setFilters({ ...filters, search: e.target.value })} placeholder="Product, number, officer"/></label><label>Status<select value={filters.state} onChange={e => setFilters({ ...filters, state: e.target.value })}><option value="">All statuses</option><option value="DRAFT">Draft</option><option value="PROCESSING">Processing</option><option value="PENDING_REVIEW">Pending review</option><option value="VERIFIED">Verified</option></select></label><label>From<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })}/></label><label>To<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })}/></label></div></section><section className="panel">{items.length ? <div className="data-table"><div className="row table-head"><span>Product / inspection</span><span>Officer</span><span>Date / findings</span><span>Status</span></div>{items.map(i => <Link className="row" to={`/inspections/${i.id}`} key={i.id}><strong>{i.product_name}<small>{i.inspection_number}</small></strong><span>{i.officer_name}</span><span>{new Date(i.created_at + 'Z').toLocaleDateString()}<small>{i.findings_count} findings</small></span><StatusBadge status={i.state}/></Link>)}</div> : <EmptyState title="No inspections found" detail="Adjust filters or create an inspection." />}</section></>;
+  const { token } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [items, setItems] = useState([]);
+  const [error, setError] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filters = Object.fromEntries(filterKeys.map(key => [key, searchParams.get(key) || '']));
+  const query = searchParams.toString();
+
+  useEffect(() => {
+    setError('');
+    request(`/inspections?${query}`, { token }).then(response => setItems(response.inspections)).catch(e => setError(e.message));
+  }, [token, query]);
+
+  function updateFilters(changes) {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(changes).forEach(([key, value]) => value ? next.set(key, value) : next.delete(key));
+    setSearchParams(next);
+  }
+
+  const showingPotentialIssues = filters.issue === 'potential';
+  const title = filters.state === 'VERIFIED' ? 'Verified inspections' : showingPotentialIssues ? 'Potential issues' : filters.state === 'PENDING_REVIEW' ? 'Awaiting review' : 'Inspections';
+
+  return <>
+    <section className="page-heading"><div><span className="eyebrow">INSPECTION REPOSITORY</span><h2>{title}</h2><p>Review field-officer records, assessment outcomes, and evidence. New inspections are created only in the Field Officer mobile app.</p></div></section>
+    {error && <p className="form-error">{error}</p>}
+    <section className="panel form-panel">
+      <div className="filter-chip-row" aria-label="Inspection shortcuts">
+        <button className={`filter-chip ${!filters.state && !filters.issue ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: '', issue: '' })}>All inspections</button>
+        <button className={`filter-chip ${filters.state === 'VERIFIED' ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: 'VERIFIED', issue: '' })}>Verified</button>
+        <button className={`filter-chip ${showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ issue: 'potential', state: '' })}>Potential issues</button>
+        <button className={`filter-chip ${filters.state === 'PENDING_REVIEW' && !showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: 'PENDING_REVIEW', issue: '' })}>Awaiting review</button>
+        <button className={`filter-chip ${filtersOpen ? 'filter-chip--active' : ''}`} onClick={() => setFiltersOpen(open => !open)}>{filtersOpen ? 'Hide filters' : 'Filters'}</button>
+      </div>
+      {filtersOpen && <div className="form-grid"><label>Search<input value={filters.search} onChange={event => updateFilters({ search: event.target.value })} placeholder="Product, number, officer" /></label><label>Status<select value={filters.state} onChange={event => updateFilters({ state: event.target.value, issue: event.target.value ? '' : filters.issue })}><option value="">All statuses</option><option value="DRAFT">Draft</option><option value="PROCESSING">Processing</option><option value="PENDING_REVIEW">Pending review</option><option value="VERIFIED">Verified</option></select></label><label>From<input type="date" value={filters.from} onChange={event => updateFilters({ from: event.target.value })} /></label><label>To<input type="date" value={filters.to} onChange={event => updateFilters({ to: event.target.value })} /></label></div>}
+    </section>
+    <section className="panel">{items.length ? <div className="data-table inspection-table"><div className="row inspection-row table-head"><span>Product / inspection</span><span>Officer</span><span>Date / findings</span><span>Status</span><span>Potential issue details</span></div>{items.map(item => <Link className="row inspection-row" to={`/inspections/${item.id}`} key={item.id}><strong>{item.product_name}<small>{item.inspection_number}</small></strong><span>{item.officer_name}</span><span>{new Date(item.created_at + 'Z').toLocaleDateString()}<small>{item.findings_count} findings</small></span><StatusBadge status={displayStatus(item)} /><span className="issue-summary">{issueSummary(item)}</span></Link>)}</div> : <EmptyState title="No inspections found" detail="Adjust the filters to view another set of inspection records." />}</section>
+  </>;
 }

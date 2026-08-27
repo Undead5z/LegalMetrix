@@ -19,11 +19,23 @@ const createSchema = z.object({
   notes: z.string().trim().max(2000).optional().nullable()
 });
 const reviewSchema = z.object({ officerDecision: z.enum(['CONFIRMED', 'REJECTED']), officerComment: z.string().trim().max(2000).optional().nullable() });
+const adminDecisionSchema = z.object({
+  decision: z.enum(['VERIFIED', 'POTENTIAL_ISSUE', 'PRODUCT_REJECTED']),
+  findingIds: z.array(z.string().uuid()).max(20).optional().default([])
+}).superRefine((data, context) => {
+  if (data.decision !== 'VERIFIED' && !data.findingIds.length) context.addIssue({ code: z.ZodIssueCode.custom, path: ['findingIds'], message: 'Select at least one automated finding that supports this decision.' });
+});
 
 const inspectionQuery = `SELECT i.*, p.product_name, p.generic_name, p.brand_name,
-  u.full_name AS officer_name, u.email AS officer_email,
-  (SELECT COUNT(*) FROM findings f WHERE f.inspection_id = i.id) AS findings_count
-  FROM inspections i JOIN products p ON p.id = i.product_id JOIN users u ON u.id = i.officer_id`;
+  u.full_name AS officer_name, u.email AS officer_email, admin.full_name AS admin_decider_name,
+  selected_finding.status AS admin_decision_finding_status, selected_finding.message AS admin_decision_finding_message, selected_rule.rule_code AS admin_decision_rule_code,
+  (SELECT COUNT(*) FROM findings f WHERE f.inspection_id = i.id) AS findings_count,
+  (SELECT COUNT(*) FROM findings f WHERE f.inspection_id = i.id AND f.status = 'POTENTIAL_NON_COMPLIANCE') AS potential_issues_count,
+  (SELECT group_concat(COALESCE(r.name, f.message), ' · ') FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = i.id AND f.status = 'POTENTIAL_NON_COMPLIANCE') AS potential_issue_summary
+  FROM inspections i JOIN products p ON p.id = i.product_id JOIN users u ON u.id = i.officer_id
+  LEFT JOIN users admin ON admin.id = i.admin_decided_by
+  LEFT JOIN findings selected_finding ON selected_finding.id = i.admin_decision_finding_id
+  LEFT JOIN rules selected_rule ON selected_rule.id = selected_finding.rule_id`;
 
 function isAdmin(user) { return ['MASTER_ADMIN', 'ADMIN'].includes(user.role); }
 function fetchInspection(id) { return db.prepare(`${inspectionQuery} WHERE i.id = ?`).get(id); }
@@ -32,12 +44,22 @@ function assertAccess(inspection, user) {
   if (!isAdmin(user) && inspection.officer_id !== user.sub) throw new AppError(403, 'You cannot access this inspection.');
 }
 function removeStoredFiles(paths) { const uploadsRoot = path.resolve(__dirname, '../../uploads'); for (const storedPath of paths.filter(Boolean)) { const absolute = path.resolve(__dirname, '../..', storedPath); if (absolute.startsWith(`${uploadsRoot}${path.sep}`)) fs.rmSync(absolute, { force: true }); } }
+function decisionFindingIds(inspection) {
+  try {
+    const ids = JSON.parse(inspection.admin_decision_finding_ids_json || '[]');
+    if (Array.isArray(ids) && ids.length) return ids;
+  } catch { /* Legacy or malformed data falls back to the original single selection. */ }
+  return inspection.admin_decision_finding_id ? [inspection.admin_decision_finding_id] : [];
+}
 function inspectionResponse(inspection) {
   const images = db.prepare('SELECT * FROM inspection_images WHERE inspection_id = ? ORDER BY created_at').all(inspection.id);
   const declarations = db.prepare('SELECT * FROM declarations WHERE inspection_id = ? ORDER BY created_at').all(inspection.id);
   const findings = db.prepare(`SELECT f.*, r.rule_code, r.legal_reference FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = ? ORDER BY f.created_at`).all(inspection.id);
   const reports = db.prepare('SELECT * FROM reports WHERE inspection_id = ? ORDER BY created_at DESC').all(inspection.id);
-  return { ...inspection, images, declarations, findings, reports };
+  const ids = decisionFindingIds(inspection);
+  const byId = new Map(findings.map(finding => [finding.id, finding]));
+  const adminDecisionFindings = ids.map(id => byId.get(id)).filter(Boolean);
+  return { ...inspection, images, declarations, findings, reports, adminDecisionFindings };
 }
 
 function createInspection(req, res) {
@@ -58,11 +80,13 @@ function createInspection(req, res) {
 }
 
 function listInspections(req, res) {
-  const state = req.query.state; const search = req.query.search?.trim(); const from = req.query.from; const to = req.query.to;
+  const state = req.query.state; const issue = req.query.issue; const search = req.query.search?.trim(); const from = req.query.from; const to = req.query.to;
   const clauses = [];
   const values = [];
   if (!isAdmin(req.user)) { clauses.push('i.officer_id = ?'); values.push(req.user.sub); }
-  if (state) { clauses.push('i.state = ?'); values.push(state); }
+  if (state === 'PENDING_REVIEW') clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
+  else if (state) { clauses.push('i.state = ?'); values.push(state); }
+  if (issue === 'potential') clauses.push("(i.admin_decision IN ('POTENTIAL_ISSUE', 'PRODUCT_REJECTED') OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))");
   if (search) { clauses.push('(p.product_name LIKE ? OR i.inspection_number LIKE ? OR u.full_name LIKE ?)'); values.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
@@ -114,7 +138,8 @@ async function analyzeInspection(req, res) {
   const visionExtraction = await visionExtractionService.extractVisually({ inspectionId: inspection.id, images: visionImages });
   const extraction = { ...deterministicExtraction, declarations: evidenceMerger.mergeEvidence(deterministicExtraction.declarations, visionExtraction.candidates, images) };
   const save = db.transaction(() => {
-    // Findings reference declarations; clear the prior assessment before replacing extracted declarations.
+    // New analysis replaces prior findings, so any administrator decision based on them is cleared.
+    db.prepare('UPDATE inspections SET admin_decision = NULL, admin_decision_comment = NULL, admin_decision_finding_id = NULL, admin_decision_finding_ids_json = NULL, admin_decided_by = NULL, admin_decided_at = NULL WHERE id = ?').run(inspection.id);
     db.prepare('DELETE FROM findings WHERE inspection_id = ?').run(inspection.id);
     db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspection.id);
     const updateImage = db.prepare('UPDATE inspection_images SET quality_state = ?, quality_reason = ?, ocr_text = ?, normalized_ocr_text = ?, ocr_confidence = ?, ocr_status = ?, ocr_error = ?, ocr_storage_path = ?, preprocessing_json = ? WHERE id = ?');
@@ -158,8 +183,29 @@ function reviewFinding(req, res) {
   db.prepare(`UPDATE findings SET officer_decision = ?, officer_comment = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .run(parsed.data.officerDecision, parsed.data.officerComment || null, req.user.sub, finding.id);
   const unreviewed = db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND officer_decision IS NULL').get(finding.inspection_id).count;
-  if (!unreviewed) db.prepare("UPDATE inspections SET state = 'VERIFIED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id);
+  const existingDecision = db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(finding.inspection_id)?.admin_decision;
+  if (!unreviewed && !['POTENTIAL_ISSUE', 'PRODUCT_REJECTED'].includes(existingDecision)) db.prepare("UPDATE inspections SET state = 'VERIFIED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id);
   res.json({ finding: db.prepare('SELECT * FROM findings WHERE id = ?').get(finding.id) });
+}
+
+async function setAdminDecision(req, res) {
+  const parsed = adminDecisionSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError(400, 'Administrator decision is invalid.', parsed.error.flatten());
+  const inspection = fetchInspection(req.params.id);
+  assertAccess(inspection, req.user);
+  const { decision } = parsed.data;
+  const findingIds = [...new Set(parsed.data.findingIds || [])];
+  if (decision !== 'VERIFIED') {
+    const placeholders = findingIds.map(() => '?').join(', ');
+    const selectedFindings = db.prepare(`SELECT id FROM findings WHERE inspection_id = ? AND status IN ('POTENTIAL_NON_COMPLIANCE', 'REVIEW_REQUIRED') AND id IN (${placeholders})`).all(inspection.id, ...findingIds);
+    if (selectedFindings.length !== findingIds.length) throw new AppError(400, 'Select only potential non-compliance or review-required findings from this inspection.');
+  }
+  const state = decision === 'VERIFIED' ? 'VERIFIED' : 'PENDING_REVIEW';
+  db.prepare(`UPDATE inspections SET admin_decision = ?, admin_decision_comment = NULL, admin_decision_finding_id = ?, admin_decision_finding_ids_json = ?, admin_decided_by = ?, admin_decided_at = CURRENT_TIMESTAMP, state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .run(decision, findingIds[0] || null, findingIds.length ? JSON.stringify(findingIds) : null, req.user.sub, state, inspection.id);
+  const reports = db.prepare("SELECT report_number FROM reports WHERE inspection_id = ? AND status = 'GENERATED'").all(inspection.id);
+  for (const report of reports) await pdfReportService.generateReport({ inspectionId: inspection.id, reportNumber: report.report_number });
+  res.json({ inspection: inspectionResponse(fetchInspection(inspection.id)), reportsRefreshed: reports.length });
 }
 
 async function requestReport(req, res) {
@@ -202,4 +248,4 @@ function getReportFile(req, res) {
   res.type('application/pdf'); res.set('Content-Disposition', `inline; filename="${report.report_number}.pdf"`); return res.sendFile(filePath);
 }
 
-module.exports = { createInspection, listInspections, getInspection, deleteInspection, addImages, getImageFile, analyzeInspection, reviewFinding, requestReport, listReports, deleteReport, getReportFile };
+module.exports = { createInspection, listInspections, getInspection, deleteInspection, addImages, getImageFile, analyzeInspection, reviewFinding, setAdminDecision, requestReport, listReports, deleteReport, getReportFile };

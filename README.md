@@ -47,7 +47,7 @@ npm start
 
 Web is served by Vite (normally `http://localhost:5173`); backend defaults to `http://localhost:4000`. The backend initializes `backend/data/legalmetrix.db` on startup.
 
-For a physical phone, `localhost` is the phone, not the development computer. Use the computer's LAN IP in `mobile/.env` and ensure the backend port is reachable on that network.
+For a physical phone, `localhost` is the phone, not the development computer. Start the mobile app with `./scripts/start-mobile.ps1` from PowerShell; it detects the current PC LAN IP, updates `mobile/.env`, and starts Expo automatically. See [docs/MOBILE_NETWORK.md](docs/MOBILE_NETWORK.md).
 
 ## Scope implemented in this foundation
 

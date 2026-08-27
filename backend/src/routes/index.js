@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const env = require('../config/env');
-const { requireAuth, requireApprovedAccount, requireAdmin, requireFieldOrAdmin } = require('../middleware/auth');
+const { requireAuth, requireApprovedAccount, requireAdmin, requireFieldOfficer, requireFieldOrAdmin } = require('../middleware/auth');
 const auth = require('../controllers/auth.controller');
 const inspection = require('../controllers/inspection.controller');
 const dashboard = require('../controllers/dashboard.controller');
@@ -41,7 +41,7 @@ router.patch('/users/:id/suspend', ...authenticated, requireAdmin, asyncHandler(
 router.patch('/users/:id/remove', ...authenticated, requireAdmin, asyncHandler(users.remove));
 router.patch('/users/:id/reactivate', ...authenticated, requireAdmin, asyncHandler(users.reactivate));
 
-router.post('/inspections', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.createInspection));
+router.post('/inspections', ...authenticated, requireFieldOfficer, asyncHandler(inspection.createInspection));
 router.get('/inspections', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.listInspections));
 router.get('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.getInspection));
 router.delete('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.deleteInspection));
@@ -49,6 +49,7 @@ router.get('/inspections/:id/images/:imageId/file', ...authenticated, requireFie
 router.post('/inspections/:id/images', ...authenticated, requireFieldOrAdmin, upload.array('images', 6), asyncHandler(inspection.addImages));
 router.post('/inspections/:id/analyze', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.analyzeInspection));
 router.patch('/findings/:id/review', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.reviewFinding));
+router.patch('/inspections/:id/admin-decision', ...authenticated, requireAdmin, asyncHandler(inspection.setAdminDecision));
 router.post('/inspections/:id/report', ...authenticated, requireAdmin, asyncHandler(inspection.requestReport));
 router.get('/reports', ...authenticated, requireAdmin, asyncHandler(inspection.listReports));
 router.get('/reports/:id/file', ...authenticated, requireAdmin, asyncHandler(inspection.getReportFile));
