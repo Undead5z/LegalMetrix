@@ -31,7 +31,8 @@ const inspectionQuery = `SELECT i.*, p.product_name, p.generic_name, p.brand_nam
   selected_finding.status AS admin_decision_finding_status, selected_finding.message AS admin_decision_finding_message, selected_rule.rule_code AS admin_decision_rule_code,
   (SELECT COUNT(*) FROM findings f WHERE f.inspection_id = i.id) AS findings_count,
   (SELECT COUNT(*) FROM findings f WHERE f.inspection_id = i.id AND f.status = 'POTENTIAL_NON_COMPLIANCE') AS potential_issues_count,
-  (SELECT group_concat(COALESCE(r.name, f.message), ' · ') FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = i.id AND f.status = 'POTENTIAL_NON_COMPLIANCE') AS potential_issue_summary
+  (SELECT group_concat(COALESCE(r.name, f.message), ' · ') FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = i.id AND f.status = 'POTENTIAL_NON_COMPLIANCE') AS potential_issue_summary,
+  (SELECT id FROM inspection_images img WHERE img.inspection_id = i.id AND img.image_type = 'FRONT' ORDER BY img.created_at LIMIT 1) AS front_image_id
   FROM inspections i JOIN products p ON p.id = i.product_id JOIN users u ON u.id = i.officer_id
   LEFT JOIN users admin ON admin.id = i.admin_decided_by
   LEFT JOIN findings selected_finding ON selected_finding.id = i.admin_decision_finding_id
@@ -114,6 +115,13 @@ function addImages(req, res) {
   assertAccess(inspection, req.user);
   if (!req.files?.length) throw new AppError(400, 'Select at least one image to upload.');
   const imageType = ['FRONT', 'BACK', 'ADDITIONAL'].includes(req.body.imageType) ? req.body.imageType : 'ADDITIONAL';
+  const limits = { FRONT: 1, BACK: 1, ADDITIONAL: 2 };
+  const discardUploads = () => req.files.forEach(file => fs.rmSync(file.path, { force: true }));
+  const existing = db.prepare('SELECT image_type, original_filename, size_bytes FROM inspection_images WHERE inspection_id = ?').all(inspection.id);
+  const existingForType = existing.filter(image => image.image_type === imageType).length;
+  if (existingForType + req.files.length > limits[imageType]) { discardUploads(); throw new AppError(400, `${imageType} evidence is limited to ${limits[imageType]} image${limits[imageType] === 1 ? '' : 's'}.`); }
+  const duplicate = req.files.find(file => existing.some(image => image.original_filename === file.originalname && image.size_bytes === file.size));
+  if (duplicate) { discardUploads(); throw new AppError(409, 'This evidence image has already been uploaded for this inspection.'); }
   const insert = db.prepare(`INSERT INTO inspection_images (id, inspection_id, image_type, original_filename, storage_path, mime_type, size_bytes)
     VALUES (?, ?, ?, ?, ?, ?, ?)`);
   const transaction = db.transaction(() => req.files.forEach((file) => insert.run(

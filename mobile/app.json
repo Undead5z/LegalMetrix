@@ -4,12 +4,15 @@
     "slug": "legalmetrix",
     "version": "0.1.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/legalmetrix-app-icon.png",
     "android": {
-      "package": "com.legalmetrix.mvp"
+      "package": "com.legalmetrix.mvp",
+      "adaptiveIcon": { "foregroundImage": "./assets/legalmetrix-mark-dark.png", "backgroundColor": "#070b08" }
     },
     "ios": {
-      "bundleIdentifier": "com.legalmetrix.mvp"
+      "bundleIdentifier": "com.legalmetrix.mvp",
+      "icon": "./assets/legalmetrix-app-icon.png"
     },
     "plugins": [
       [

@@ -39,7 +39,7 @@ export function InspectionsPage() {
   const title = filters.state === 'VERIFIED' ? 'Verified inspections' : showingPotentialIssues ? 'Potential issues' : filters.state === 'PENDING_REVIEW' ? 'Awaiting review' : 'Inspections';
 
   return <>
-    <section className="page-heading"><div><span className="eyebrow">INSPECTION REPOSITORY</span><h2>{title}</h2><p>Review field-officer records, assessment outcomes, and evidence. New inspections are created only in the Field Officer mobile app.</p></div></section>
+    <section className="page-heading"><div><span className="eyebrow gold-label">INSPECTION REPOSITORY</span><h2>{title}</h2><p>Review field-officer records, assessment outcomes, and evidence. New inspections are created only in the Field Officer mobile app.</p></div></section>
     {error && <p className="form-error">{error}</p>}
     <section className="panel form-panel">
       <div className="filter-chip-row" aria-label="Inspection shortcuts">
