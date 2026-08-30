@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "test": "node tests/evidence-merger.test.js && node tests/rule-engine.test.js && node tests/workflow-state.test.js && node tests/auth-cors.test.js",
     "init-db": "node src/db/init.js",
-    "prepare-sih-demo": "node scripts/prepare-sih-demo.js",
     "export-project-dataset": "node scripts/export-project-dataset.js"
   },
   "dependencies": {

@@ -25,7 +25,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
   actor_user_id TEXT REFERENCES users(id),
   target_user_id TEXT REFERENCES users(id),
-  action TEXT NOT NULL CHECK (action IN ('USER_REGISTERED', 'USER_DETAILS_UPDATED', 'USER_APPROVED', 'USER_REJECTED', 'USER_SUSPENDED', 'USER_REACTIVATED', 'LOGIN_SUCCESS', 'LOGIN_DENIED_PENDING_APPROVAL', 'LOGIN_DENIED_ROLE')),
+  inspection_id TEXT,
+  finding_id TEXT,
+  report_id TEXT,
+  action TEXT NOT NULL,
+  metadata_json TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_user_id, created_at);
@@ -44,7 +48,7 @@ CREATE TABLE IF NOT EXISTS inspections (
   inspection_number TEXT NOT NULL UNIQUE,
   product_id TEXT NOT NULL REFERENCES products(id),
   officer_id TEXT NOT NULL REFERENCES users(id),
-  state TEXT NOT NULL CHECK (state IN ('DRAFT', 'PROCESSING', 'PENDING_REVIEW', 'VERIFIED', 'REPORT_GENERATED')) DEFAULT 'DRAFT',
+  state TEXT NOT NULL CHECK (state IN ('DRAFT', 'PROCESSING', 'PENDING_REVIEW', 'OFFICER_REVIEW_COMPLETED', 'ADMIN_REVIEW_PENDING', 'VERIFIED', 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW', 'REPORT_GENERATED')) DEFAULT 'DRAFT',
   location TEXT,
   notes TEXT,
   ai_extraction_json TEXT,
@@ -53,7 +57,7 @@ CREATE TABLE IF NOT EXISTS inspections (
   vision_diagnostics_json TEXT,
   vision_cache_key TEXT,
   vision_completed_at TEXT,
-  admin_decision TEXT CHECK (admin_decision IN ('VERIFIED', 'POTENTIAL_ISSUE', 'PRODUCT_REJECTED')),
+  admin_decision TEXT CHECK (admin_decision IN ('VERIFIED', 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW')),
   admin_decision_comment TEXT,
   admin_decision_finding_id TEXT REFERENCES findings(id),
   admin_decision_finding_ids_json TEXT,

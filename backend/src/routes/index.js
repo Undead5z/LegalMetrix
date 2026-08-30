@@ -46,9 +46,9 @@ router.get('/inspections', ...authenticated, requireFieldOrAdmin, asyncHandler(i
 router.get('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.getInspection));
 router.delete('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.deleteInspection));
 router.get('/inspections/:id/images/:imageId/file', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.getImageFile));
-router.post('/inspections/:id/images', ...authenticated, requireFieldOrAdmin, upload.array('images', 6), asyncHandler(inspection.addImages));
-router.post('/inspections/:id/analyze', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.analyzeInspection));
-router.patch('/findings/:id/review', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.reviewFinding));
+router.post('/inspections/:id/images', ...authenticated, requireFieldOfficer, upload.array('images', 6), asyncHandler(inspection.addImages));
+router.post('/inspections/:id/analyze', ...authenticated, requireFieldOfficer, asyncHandler(inspection.analyzeInspection));
+router.patch('/findings/:id/review', ...authenticated, requireFieldOfficer, asyncHandler(inspection.reviewFinding));
 router.patch('/inspections/:id/admin-decision', ...authenticated, requireAdmin, asyncHandler(inspection.setAdminDecision));
 router.post('/inspections/:id/report', ...authenticated, requireAdmin, asyncHandler(inspection.requestReport));
 router.get('/reports', ...authenticated, requireAdmin, asyncHandler(inspection.listReports));

@@ -10,6 +10,7 @@ const visionExtractionService = require('../services/vision-extraction.service')
 const evidenceMerger = require('../services/evidence-merger.service');
 const ruleEngine = require('../services/rule-engine.service');
 const pdfReportService = require('../services/pdf-report.service');
+const { logAuditEvent } = require('../services/audit-log.service');
 
 const createSchema = z.object({
   productName: z.string().trim().min(1).max(200),
@@ -20,8 +21,9 @@ const createSchema = z.object({
 });
 const reviewSchema = z.object({ officerDecision: z.enum(['CONFIRMED', 'REJECTED']), officerComment: z.string().trim().max(2000).optional().nullable() });
 const adminDecisionSchema = z.object({
-  decision: z.enum(['VERIFIED', 'POTENTIAL_ISSUE', 'PRODUCT_REJECTED']),
-  findingIds: z.array(z.string().uuid()).max(20).optional().default([])
+  decision: z.enum(['VERIFIED', 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW']),
+  findingIds: z.array(z.string().uuid()).max(20).optional().default([]),
+  comment: z.string().trim().max(2000).optional().nullable()
 }).superRefine((data, context) => {
   if (data.decision !== 'VERIFIED' && !data.findingIds.length) context.addIssue({ code: z.ZodIssueCode.custom, path: ['findingIds'], message: 'Select at least one automated finding that supports this decision.' });
 });
@@ -40,6 +42,7 @@ const inspectionQuery = `SELECT i.*, p.product_name, p.generic_name, p.brand_nam
 
 function isAdmin(user) { return ['MASTER_ADMIN', 'ADMIN'].includes(user.role); }
 function fetchInspection(id) { return db.prepare(`${inspectionQuery} WHERE i.id = ?`).get(id); }
+function assertOfficerOwner(inspection, user) { assertAccess(inspection, user); if (user.role !== 'FIELD_OFFICER' || inspection.officer_id !== user.sub) throw new AppError(403, 'Only the assigned Field Officer can perform this workflow action.'); }
 function assertAccess(inspection, user) {
   if (!inspection) throw new AppError(404, 'Inspection was not found.');
   if (!isAdmin(user) && inspection.officer_id !== user.sub) throw new AppError(403, 'You cannot access this inspection.');
@@ -77,6 +80,7 @@ function createInspection(req, res) {
       .run(inspectionId, inspectionNumber, productId, req.user.sub, data.location || null, data.notes || null);
   });
   transaction();
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId, action: 'INSPECTION_CREATED', metadata: { inspectionNumber } });
   res.status(201).json({ inspection: inspectionResponse(fetchInspection(inspectionId)) });
 }
 
@@ -87,7 +91,7 @@ function listInspections(req, res) {
   if (!isAdmin(req.user)) { clauses.push('i.officer_id = ?'); values.push(req.user.sub); }
   if (state === 'PENDING_REVIEW') clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
   else if (state) { clauses.push('i.state = ?'); values.push(state); }
-  if (issue === 'potential') clauses.push("(i.admin_decision IN ('POTENTIAL_ISSUE', 'PRODUCT_REJECTED') OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))");
+  if (issue === 'potential') clauses.push("(i.admin_decision IN ('POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW') OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))");
   if (search) { clauses.push('(p.product_name LIKE ? OR i.inspection_number LIKE ? OR u.full_name LIKE ?)'); values.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
@@ -128,7 +132,9 @@ function addImages(req, res) {
     crypto.randomUUID(), inspection.id, imageType, file.originalname, path.relative(path.resolve(__dirname, '../..'), file.path).replace(/\\/g, '/'), file.mimetype, file.size
   )));
   transaction();
-  db.prepare("UPDATE inspections SET vision_cache_key = NULL, vision_extraction_json = NULL, vision_diagnostics_json = NULL, vision_completed_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
+  db.prepare("UPDATE inspections SET state = 'DRAFT', vision_cache_key = NULL, vision_extraction_json = NULL, vision_diagnostics_json = NULL, vision_completed_at = NULL, admin_decision = NULL, admin_decision_comment = NULL, admin_decision_finding_id = NULL, admin_decision_finding_ids_json = NULL, admin_decided_by = NULL, admin_decided_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
+  db.prepare('DELETE FROM findings WHERE inspection_id = ?').run(inspection.id); db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspection.id);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'EVIDENCE_UPLOADED', metadata: { imageType, count: req.files.length } });
   res.status(201).json({ inspection: inspectionResponse(fetchInspection(inspection.id)) });
 }
 
@@ -140,6 +146,7 @@ async function analyzeInspection(req, res) {
   const recoveryState = inspection.state === 'PROCESSING' ? 'DRAFT' : inspection.state;
   try {
   db.prepare("UPDATE inspections SET state = 'PROCESSING', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_STARTED' });
   const ocr = await ocrService.readImages(images);
   const deterministicExtraction = await extractionService.extractDeclarations(ocr);
   const visionImages = images.map(image => ({ ...image, ocr_hint: ocr.images.find(result => result.imageId === image.id)?.normalizedText || '' }));
@@ -167,6 +174,7 @@ async function analyzeInspection(req, res) {
   });
   saveFindings();
   db.prepare("UPDATE inspections SET state = 'PENDING_REVIEW', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_COMPLETED', metadata: { ocrState: ocr.state, visionFallback: Boolean(visionExtraction.diagnostics?.fallbackUsed) } });
   res.status(202).json({ inspection: inspectionResponse(fetchInspection(inspection.id)), analysis: { state: ocr.state, message: 'Preliminary analysis completed and stored.', ocr, ocrOnlyExtraction: deterministicExtraction, extraction, aiExtraction: visionExtraction.diagnostics, visionExtraction: visionExtraction.diagnostics, assessment } });
   } catch (error) {
     db.prepare('UPDATE inspections SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(recoveryState, inspection.id);
@@ -187,12 +195,13 @@ function reviewFinding(req, res) {
   const finding = db.prepare('SELECT * FROM findings WHERE id = ?').get(req.params.id);
   if (!finding) throw new AppError(404, 'Finding was not found.');
   const inspection = fetchInspection(finding.inspection_id);
-  assertAccess(inspection, req.user);
+  assertOfficerOwner(inspection, req.user);
+  if (inspection.state !== 'PENDING_REVIEW') throw new AppError(409, 'Findings can only be reviewed while the inspection is pending Field Officer review.');
   db.prepare(`UPDATE findings SET officer_decision = ?, officer_comment = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .run(parsed.data.officerDecision, parsed.data.officerComment || null, req.user.sub, finding.id);
   const unreviewed = db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND officer_decision IS NULL').get(finding.inspection_id).count;
-  const existingDecision = db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(finding.inspection_id)?.admin_decision;
-  if (!unreviewed && !['POTENTIAL_ISSUE', 'PRODUCT_REJECTED'].includes(existingDecision)) db.prepare("UPDATE inspections SET state = 'VERIFIED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id);
+  if (!unreviewed) { db.prepare("UPDATE inspections SET state = 'OFFICER_REVIEW_COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id); logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, action: 'OFFICER_REVIEW_COMPLETED' }); }
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, findingId: finding.id, action: `FINDING_${parsed.data.officerDecision}` });
   res.json({ finding: db.prepare('SELECT * FROM findings WHERE id = ?').get(finding.id) });
 }
 
@@ -201,6 +210,8 @@ async function setAdminDecision(req, res) {
   if (!parsed.success) throw new AppError(400, 'Administrator decision is invalid.', parsed.error.flatten());
   const inspection = fetchInspection(req.params.id);
   assertAccess(inspection, req.user);
+  if (!isAdmin(req.user)) throw new AppError(403, 'Only an authorized Administrator can record a final administrative outcome.');
+  if (!['OFFICER_REVIEW_COMPLETED', 'ADMIN_REVIEW_PENDING'].includes(inspection.state)) throw new AppError(409, 'Complete Field Officer review before recording an administrative outcome.');
   const { decision } = parsed.data;
   const findingIds = [...new Set(parsed.data.findingIds || [])];
   if (decision !== 'VERIFIED') {
@@ -208,9 +219,14 @@ async function setAdminDecision(req, res) {
     const selectedFindings = db.prepare(`SELECT id FROM findings WHERE inspection_id = ? AND status IN ('POTENTIAL_NON_COMPLIANCE', 'REVIEW_REQUIRED') AND id IN (${placeholders})`).all(inspection.id, ...findingIds);
     if (selectedFindings.length !== findingIds.length) throw new AppError(400, 'Select only potential non-compliance or review-required findings from this inspection.');
   }
-  const state = decision === 'VERIFIED' ? 'VERIFIED' : 'PENDING_REVIEW';
-  db.prepare(`UPDATE inspections SET admin_decision = ?, admin_decision_comment = NULL, admin_decision_finding_id = ?, admin_decision_finding_ids_json = ?, admin_decided_by = ?, admin_decided_at = CURRENT_TIMESTAMP, state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
-    .run(decision, findingIds[0] || null, findingIds.length ? JSON.stringify(findingIds) : null, req.user.sub, state, inspection.id);
+  const unresolved = db.prepare("SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND (officer_decision IS NULL OR (status IN ('POTENTIAL_NON_COMPLIANCE','REVIEW_REQUIRED') AND officer_decision <> 'REJECTED'))").get(inspection.id).count;
+  const conflicts = db.prepare("SELECT COUNT(*) AS count FROM declarations WHERE inspection_id = ? AND extraction_state = 'NEEDS_REVIEW'").get(inspection.id).count;
+  // Automated findings remain intact as decision-support evidence. An authorized Admin may manually verify after visually reviewing the submitted evidence.
+  const manualOverride = decision === 'VERIFIED' && (unresolved > 0 || conflicts > 0);
+  const state = decision;
+  db.prepare(`UPDATE inspections SET admin_decision = ?, admin_decision_comment = ?, admin_decision_finding_id = ?, admin_decision_finding_ids_json = ?, admin_decided_by = ?, admin_decided_at = CURRENT_TIMESTAMP, state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .run(decision, parsed.data.comment || null, findingIds[0] || null, findingIds.length ? JSON.stringify(findingIds) : null, req.user.sub, state, inspection.id);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ADMIN_DECISION_RECORDED', metadata: { finalDecision: decision, findingIds, automatedFindingsRemaining: unresolved, extractionConflictsRemaining: conflicts, manualOverride } });
   const reports = db.prepare("SELECT report_number FROM reports WHERE inspection_id = ? AND status = 'GENERATED'").all(inspection.id);
   for (const report of reports) await pdfReportService.generateReport({ inspectionId: inspection.id, reportNumber: report.report_number });
   res.json({ inspection: inspectionResponse(fetchInspection(inspection.id)), reportsRefreshed: reports.length });
@@ -226,6 +242,7 @@ async function requestReport(req, res) {
   try {
     const generation = await pdfReportService.generateReport({ inspectionId: inspection.id, reportNumber });
     db.prepare("UPDATE reports SET status = 'GENERATED', storage_path = ?, generated_at = CURRENT_TIMESTAMP WHERE id = ?").run(generation.storagePath, reportId);
+    logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, reportId, action: 'REPORT_GENERATED', metadata: { reportNumber } });
     res.status(201).json({ report: db.prepare('SELECT * FROM reports WHERE id = ?').get(reportId), generation });
   } catch (error) {
     db.prepare("UPDATE reports SET status = 'FAILED' WHERE id = ?").run(reportId);
@@ -252,7 +269,7 @@ function getReportFile(req, res) {
   if (!isAdmin(req.user) && report.officer_id !== req.user.sub) throw new AppError(403, 'You cannot access this report.');
   if (!report.storage_path) throw new AppError(404, 'Generated report file is unavailable.');
   const filePath = path.resolve(__dirname, '../..', report.storage_path);
-  if (req.query.download === '1') return res.download(filePath, `${report.report_number}.pdf`);
+  if (req.query.download === '1') { logAuditEvent({ actorUserId: req.user.sub, inspectionId: report.inspection_id, reportId: report.id, action: 'REPORT_DOWNLOADED', metadata: { reportNumber: report.report_number } }); return res.download(filePath, `${report.report_number}.pdf`); }
   res.type('application/pdf'); res.set('Content-Disposition', `inline; filename="${report.report_number}.pdf"`); return res.sendFile(filePath);
 }
 

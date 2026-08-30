@@ -1,75 +1,61 @@
-# LegalMetrix MVP foundation
+# Development guide
 
-## Architecture
+## Current runtime architecture
 
-The web and mobile clients call one Express API. Express persists structured inspection data in SQLite and stores image files on a private local filesystem path (`backend/uploads/`); SQLite stores image metadata only. The processing pipeline is intentionally modular:
+`POST /api/inspections/:id/analyze` orchestrates the active backend path:
 
+```text
+Private evidence images
+→ quality assessment and Tesseract OCR
+→ deterministic declaration candidates
++ Vision AI candidates
+→ evidence merger
+→ persisted structured declarations
+→ version-aware deterministic rule assessment
+→ persisted automated findings
+→ Field Officer review
+→ Admin/Master Admin human final decision
+→ PDF reports and audit history
 ```
-inspection images → OCR service → declaration extraction → deterministic rule engine → findings → officer review → PDF report
-```
 
-The current service implementations return `NOT_IMPLEMENTED` and create no declarations or findings. Regulatory logic must be stored in `rules`, not in client components or OCR code. Exact legal citations are not seeded; future supplied citations must be used, otherwise retain `LEGAL_REFERENCE_PENDING_VERIFICATION`.
+`semantic-extraction.service.js` is experimental and is not called by this path.
 
-## Database
+## Workflow and human override
 
-`backend/src/db/schema.sql` is idempotently applied at backend start.
+States: `DRAFT`, `PROCESSING`, `PENDING_REVIEW`, `OFFICER_REVIEW_COMPLETED`, then `VERIFIED`, `POTENTIAL_NON_COMPLIANCE_CONFIRMED`, or `ESCALATED_FOR_ENFORCEMENT_REVIEW`.
 
-| Table | Purpose |
+Only `ADMIN` and `MASTER_ADMIN` record final outcomes. Field Officers capture evidence, run analysis, and review individual findings. Automated findings, missing declarations, low confidence, and `NEEDS_REVIEW` conflicts are decision-support information. When verifying with such results remaining, the Admin UI requires explicit override confirmation and accepts an optional note. Findings and declarations are not modified to make them appear to pass.
+
+`ADMIN_DECISION_RECORDED` audit metadata records the final decision, selected finding IDs, remaining automated finding/conflict counts, and `manualOverride` without storing credentials or secrets.
+
+## Services
+
+| Service | Active role |
 |---|---|
-| `users` | Authenticated `ADMIN` and `OFFICER` accounts with bcrypt password hashes. |
-| `products` | Product identity recorded per MVP inspection. |
-| `inspections` | Officer-owned inspection, location/notes, and workflow state. |
-| `inspection_images` | Evidence metadata, type, MIME type, private storage path, and quality state. |
-| `declarations` | Future extracted declarations with value, confidence, source image, and bounding box. |
-| `rules` | Version-aware, updateable regulatory requirement data and legal-reference field. |
-| `findings` | Separate automated status/evidence and officer decision/comment fields. |
-| `reports` | Requested/generated report metadata; no PDF is currently generated. |
+| `ocr.service.js` | image quality assessment and local Tesseract OCR |
+| `declaration-extraction.service.js` | deterministic declaration candidates |
+| `vision-extraction.service.js` | configured Vision AI candidates and diagnostics/fallback |
+| `evidence-merger.service.js` | reconciles OCR and Vision evidence |
+| `rule-engine.service.js` | version-aware deterministic findings |
+| `pdf-report.service.js` | report generation |
+| `semantic-extraction.service.js` | experimental; not wired into analysis |
 
-Inspection states are `DRAFT`, `PROCESSING`, `PENDING_REVIEW`, `VERIFIED`, and `REPORT_GENERATED`. Finding states are restricted to `PASS`, `POTENTIAL_NON_COMPLIANCE`, `REVIEW_REQUIRED`, and `NOT_APPLICABLE`.
+## Auth, RBAC, and CORS
 
-## API
+Roles are `MASTER_ADMIN`, `ADMIN`, `FIELD_OFFICER`; account states are `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `SUSPENDED`. JWT-protected API access and account approval checks remain server-side. Field Officers log in through `MOBILE`; Admins through `WEB`.
 
-All routes other than login require `Authorization: Bearer <JWT>`.
+Browser CORS is an allow-list from `CORS_ORIGINS`; default development origin is `http://localhost:5173`. Requests without an Origin header, such as Expo/native requests, remain supported.
 
-| Method | Path | Current behavior |
-|---|---|---|
-| `POST` | `/api/auth/login` | Validates credentials and returns JWT plus safe user data. |
-| `POST` | `/api/inspections` | Creates a product and officer-owned `DRAFT` inspection. |
-| `POST` | `/api/inspections/:id/images` | Accepts multipart `images` (up to 6) plus `imageType`; validates and stores private files. |
-| `POST` | `/api/inspections/:id/analyze` | Invokes all processing interfaces; returns `NOT_IMPLEMENTED`, no invented results. |
-| `GET` | `/api/inspections` | Lists inspections visible to the caller; officers see only their own. |
-| `GET` | `/api/inspections/:id` | Returns inspection, evidence metadata, declarations, findings, reports. |
-| `PATCH` | `/api/findings/:id/review` | Prepares officer confirmation/rejection for real future findings. |
-| `POST` | `/api/inspections/:id/report` | Records a report request and returns `NOT_IMPLEMENTED` PDF-generation state. |
-| `GET` | `/api/dashboard/stats` | Database-derived counts only, scoped to caller role. |
-| `GET` | `/api/reports` | Additional endpoint used by the functional web Reports screen. |
-| `GET` | `/health` | Unauthenticated backend health check. |
+## Theme and provider setup
 
-## Verification completed
+Web theme state supports Light/Dark mode through CSS theme tokens; mobile exposes matching semantic theme values in `mobile/src/theme.js`.
 
-- `backend`: schema initialized successfully and Express imported successfully.
-- Authentication: seeded officer login verified via `POST /api/auth/login`.
-- Inspection creation: authenticated `POST /api/inspections` verified; test data was then reset by recreating the database with seed users only.
-- `web`: Vite dev server started successfully and `npm run build` succeeded.
-- `mobile`: Expo Metro started successfully and Android bundle export succeeded.
-- Client navigation is implemented for all requested screens.
+Vision extraction uses the OpenRouter-compatible variables in `backend/.env.example`: `VISION_AI_PROVIDER`, `VISION_AI_BASE_URL`, `VISION_AI_API_KEY`, and `VISION_AI_MODEL`. Never commit a real API key.
 
-## Current limitations / intentional placeholders
+## Testing and real-data evaluation
 
-1. OCR, CV quality assessment, declaration extraction, deterministic rule validation, and PDF file generation are `NOT_IMPLEMENTED` by design for this run.
-2. The SQLite database and uploaded image storage are local-MVP only; no backup, encryption-at-rest, virus scanning, or retention policy is yet configured.
-3. Camera/gallery features require a device/emulator and runtime permission; physical devices must use a LAN-reachable API URL.
-4. There is no offline queue/sync, password reset, user administration UI, audit log, report download, or product deduplication yet.
-5. `PENDING_REVIEW` after analysis means the processing request completed but has no implemented automated assessment; it is not a compliance conclusion.
-6. Browser CORS is permissive for local development and must be restricted for deployment.
+Run backend functional tests with `cd backend; npm test`; build web with `cd web; npm run build`.
 
-## Files to modify in future runs
+Functional testing covers authentication, approval/RBAC, upload, OCR, Vision fallback, extraction, rules, review, Admin decision, reports, and CORS. Dataset evaluation is separate: use real packaged-product photographs and manually annotated ground truth. Record confidence separately from accuracy; do not derive accuracy percentages from model confidence.
 
-- OCR adapter: `backend/src/services/ocr.service.js`
-- Structured declaration mapping: `backend/src/services/declaration-extraction.service.js`
-- Versioned deterministic assessment: `backend/src/services/rule-engine.service.js`, `backend/src/db/schema.sql`
-- PDF implementation: `backend/src/services/pdf-report.service.js`
-- Processing orchestration/API persistence: `backend/src/controllers/inspection.controller.js`
-- Officer-review web UI: `web/src/pages/InspectionDetailPage.jsx`
-- Field capture and multi-image/offline improvements: `mobile/App.js`
-- API policy, upload hardening, production CORS: `backend/src/routes/index.js`, `backend/src/app.js`, `backend/src/config/env.js`
+SQLite initialization seeds required bootstrap accounts and LegalMetrix rules only. It does not create synthetic inspection or product data.

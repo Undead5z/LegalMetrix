@@ -1,4 +1,4 @@
 export function StatusBadge({ status }) {
-  const labels = { PENDING_APPROVAL: 'PENDING VERIFICATION', APPROVED: 'APPROVED', REJECTED: 'REJECTED', SUSPENDED: 'SUSPENDED' }; const label = labels[status] || status?.replaceAll('_', ' ') || 'UNKNOWN';
+  const labels = { PENDING_APPROVAL: 'PENDING VERIFICATION', APPROVED: 'APPROVED', REJECTED: 'REJECTED', SUSPENDED: 'SUSPENDED', OFFICER_REVIEW_COMPLETED: 'OFFICER REVIEW COMPLETED', ADMIN_REVIEW_PENDING: 'ADMIN REVIEW PENDING', POTENTIAL_NON_COMPLIANCE_CONFIRMED: 'POTENTIAL NON-COMPLIANCE CONFIRMED', ESCALATED_FOR_ENFORCEMENT_REVIEW: 'ESCALATED FOR ENFORCEMENT REVIEW' }; const label = labels[status] || status?.replaceAll('_', ' ') || 'UNKNOWN';
   return <span className={`status status--${status || 'UNKNOWN'}`}>{label}</span>;
 }

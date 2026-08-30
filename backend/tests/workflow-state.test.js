@@ -1,0 +1,70 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const testDb = path.join(__dirname, '../data/round2-workflow-test.db');
+for (const suffix of ['', '-wal', '-shm', '.pre-round2-backup']) { try { fs.rmSync(`${testDb}${suffix}`); } catch {} }
+process.env.DATABASE_PATH = './data/round2-workflow-test.db';
+process.env.NODE_ENV = 'test';
+require('../src/db/init');
+const db = require('../src/db/database');
+const inspection = require('../src/controllers/inspection.controller');
+
+const response = () => ({ code: 200, body: null, status(code) { this.code = code; return this; }, json(value) { this.body = value; return value; } });
+const expectAppError = (fn, message) => { try { fn(); assert.fail('Expected an AppError'); } catch (error) { assert.equal(error.statusCode, 409); assert.match(error.message, new RegExp(message)); } };
+
+async function main() {
+const officer = db.prepare("SELECT id FROM users WHERE email = 'officer@legalmetrix.local'").get();
+const admin = db.prepare("SELECT id FROM users WHERE email = 'admin@legalmetrix.local'").get();
+const productId = '10000000-0000-4000-8000-000000000001';
+const inspectionId = '20000000-0000-4000-8000-000000000001';
+const findingOne = '30000000-0000-4000-8000-000000000001';
+const findingTwo = '30000000-0000-4000-8000-000000000002';
+db.prepare('INSERT INTO products (id, product_name) VALUES (?, ?)').run(productId, 'Workflow test product');
+db.prepare("INSERT INTO inspections (id, inspection_number, product_id, officer_id, state) VALUES (?, ?, ?, ?, 'PENDING_REVIEW')").run(inspectionId, 'LM-TEST-WORKFLOW', productId, officer.id);
+for (const id of [findingOne, findingTwo]) db.prepare("INSERT INTO findings (id, inspection_id, status, message) VALUES (?, ?, 'PASS', ?)").run(id, inspectionId, `Finding ${id}`);
+
+// An administrator cannot skip the Field Officer stage.
+try { await inspection.setAdminDecision({ params: { id: inspectionId }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { decision: 'VERIFIED' } }, response()); assert.fail('Expected admin decision to be blocked before Field Officer review'); } catch (error) { assert.equal(error.statusCode, 409); }
+
+inspection.reviewFinding({ params: { id: findingOne }, user: { sub: officer.id, role: 'FIELD_OFFICER' }, body: { officerDecision: 'CONFIRMED' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionId).state, 'PENDING_REVIEW');
+inspection.reviewFinding({ params: { id: findingTwo }, user: { sub: officer.id, role: 'FIELD_OFFICER' }, body: { officerDecision: 'CONFIRMED' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionId).state, 'OFFICER_REVIEW_COMPLETED');
+assert.equal(db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND reviewed_by = ? AND reviewed_at IS NOT NULL').get(inspectionId, officer.id).count, 2);
+assert.equal(db.prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE inspection_id = ? AND action = 'OFFICER_REVIEW_COMPLETED'").get(inspectionId).count, 1);
+
+await inspection.setAdminDecision({ params: { id: inspectionId }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { decision: 'VERIFIED' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionId).state, 'VERIFIED');
+assert.equal(db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(inspectionId).admin_decision, 'VERIFIED');
+
+// An authorized Admin may manually verify despite automated findings, preserving the finding and override audit metadata.
+const productTwo = '10000000-0000-4000-8000-000000000002'; const inspectionTwo = '20000000-0000-4000-8000-000000000002'; const issueFinding = '30000000-0000-4000-8000-000000000003';
+db.prepare('INSERT INTO products (id, product_name) VALUES (?, ?)').run(productTwo, 'Unresolved finding test');
+db.prepare("INSERT INTO inspections (id, inspection_number, product_id, officer_id, state) VALUES (?, ?, ?, ?, 'OFFICER_REVIEW_COMPLETED')").run(inspectionTwo, 'LM-TEST-UNRESOLVED', productTwo, officer.id);
+db.prepare("INSERT INTO findings (id, inspection_id, status, message, officer_decision, reviewed_by, reviewed_at) VALUES (?, ?, 'POTENTIAL_NON_COMPLIANCE', ?, 'CONFIRMED', ?, CURRENT_TIMESTAMP)").run(issueFinding, inspectionTwo, 'Potential issue remains', officer.id);
+db.prepare("INSERT INTO declarations (id, inspection_id, field_name, value, detection_state, confidence, extraction_state, ocr_evidence) VALUES (?, ?, 'mrp', NULL, 'NOT_DETECTED', .42, 'NEEDS_REVIEW', 'Unreadable OCR candidate')").run('40000000-0000-4000-8000-000000000002', inspectionTwo);
+await inspection.setAdminDecision({ params: { id: inspectionTwo }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { decision: 'VERIFIED', comment: 'MRP confirmed by manual evidence review.' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionTwo).state, 'VERIFIED');
+assert.equal(db.prepare('SELECT officer_decision FROM findings WHERE id = ?').get(issueFinding).officer_decision, 'CONFIRMED');
+assert.deepEqual(db.prepare("SELECT value, detection_state, confidence, extraction_state, ocr_evidence FROM declarations WHERE inspection_id = ? AND field_name = 'mrp'").get(inspectionTwo), { value: null, detection_state: 'NOT_DETECTED', confidence: .42, extraction_state: 'NEEDS_REVIEW', ocr_evidence: 'Unreadable OCR candidate' });
+assert.equal(db.prepare('SELECT admin_decision_comment FROM inspections WHERE id = ?').get(inspectionTwo).admin_decision_comment, 'MRP confirmed by manual evidence review.');
+const overrideAudit = JSON.parse(db.prepare("SELECT metadata_json FROM audit_logs WHERE inspection_id = ? AND action = 'ADMIN_DECISION_RECORDED' ORDER BY created_at DESC LIMIT 1").get(inspectionTwo).metadata_json);
+assert.equal(overrideAudit.manualOverride, true);
+assert.equal(overrideAudit.finalDecision, 'VERIFIED');
+assert.ok(overrideAudit.automatedFindingsRemaining > 0);
+
+// Field Officers are forbidden from final administrative decisions, even when they own the inspection.
+try { await inspection.setAdminDecision({ params: { id: inspectionTwo }, user: { sub: officer.id, role: 'FIELD_OFFICER' }, body: { decision: 'VERIFIED' } }, response()); assert.fail('Expected Field Officer final decision to be forbidden'); } catch (error) { assert.equal(error.statusCode, 403); }
+
+// A conflicting OCR/Vision candidate also remains visible but does not remove authorized Admin authority.
+const productThree = '10000000-0000-4000-8000-000000000003'; const inspectionThree = '20000000-0000-4000-8000-000000000003';
+db.prepare('INSERT INTO products (id, product_name) VALUES (?, ?)').run(productThree, 'Extraction conflict test');
+db.prepare("INSERT INTO inspections (id, inspection_number, product_id, officer_id, state) VALUES (?, ?, ?, ?, 'OFFICER_REVIEW_COMPLETED')").run(inspectionThree, 'LM-TEST-CONFLICT', productThree, officer.id);
+db.prepare("INSERT INTO declarations (id, inspection_id, field_name, extraction_state) VALUES (?, ?, 'mrp', 'NEEDS_REVIEW')").run('40000000-0000-4000-8000-000000000001', inspectionThree);
+await inspection.setAdminDecision({ params: { id: inspectionThree }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { decision: 'VERIFIED', comment: 'Conflict resolved by direct evidence inspection.' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionThree).state, 'VERIFIED');
+console.log('Workflow ownership and manual override tests passed.');
+db.close();
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });

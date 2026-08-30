@@ -30,13 +30,41 @@ if (!userTableSql.includes('MASTER_ADMIN')) {
 
 // Rebuild the small audit table when adding a newly auditable account action.
 const auditTableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'audit_logs'").get()?.sql || '';
-if (!auditTableSql.includes('USER_DETAILS_UPDATED')) {
+if (!auditTableSql.includes('metadata_json')) {
   db.pragma('foreign_keys = OFF');
-  db.exec(`CREATE TABLE audit_logs_migrated (
-    id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), target_user_id TEXT REFERENCES users(id),
-    action TEXT NOT NULL CHECK (action IN ('USER_REGISTERED', 'USER_DETAILS_UPDATED', 'USER_APPROVED', 'USER_REJECTED', 'USER_SUSPENDED', 'USER_REACTIVATED', 'LOGIN_SUCCESS', 'LOGIN_DENIED_PENDING_APPROVAL', 'LOGIN_DENIED_ROLE')),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  ); INSERT INTO audit_logs_migrated SELECT id, actor_user_id, target_user_id, action, created_at FROM audit_logs; DROP TABLE audit_logs; ALTER TABLE audit_logs_migrated RENAME TO audit_logs; CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_user_id, created_at);`);
+  db.exec(`CREATE TABLE audit_logs_migrated (\n    id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), target_user_id TEXT REFERENCES users(id),\n    inspection_id TEXT, finding_id TEXT, report_id TEXT, action TEXT NOT NULL, metadata_json TEXT,\n    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP\n  ); INSERT INTO audit_logs_migrated (id, actor_user_id, target_user_id, action, created_at) SELECT id, actor_user_id, target_user_id, action, created_at FROM audit_logs; DROP TABLE audit_logs; ALTER TABLE audit_logs_migrated RENAME TO audit_logs; CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_user_id, created_at); CREATE INDEX IF NOT EXISTS idx_audit_logs_inspection ON audit_logs(inspection_id, created_at);`);
+  db.pragma('foreign_keys = ON');
+}
+
+// Preserve a recoverable SQLite snapshot before state/audit schema migration.
+const backupPath = `${db.name || path.join(__dirname, '../../data/legalmetrix.db')}.pre-round2-backup`;
+const inspectionTableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'inspections'").get()?.sql || '';
+if (!inspectionTableSql.includes('OFFICER_REVIEW_COMPLETED')) {
+  db.pragma('wal_checkpoint(TRUNCATE)');
+  const sourcePath = db.name || path.join(__dirname, '../../data/legalmetrix.db');
+  if (fs.existsSync(sourcePath) && !fs.existsSync(backupPath)) fs.copyFileSync(sourcePath, backupPath);
+  db.pragma('foreign_keys = OFF');
+  db.exec(`CREATE TABLE inspections_migrated (
+    id TEXT PRIMARY KEY, inspection_number TEXT NOT NULL UNIQUE, product_id TEXT NOT NULL REFERENCES products(id), officer_id TEXT NOT NULL REFERENCES users(id),
+    state TEXT NOT NULL CHECK (state IN ('DRAFT','PROCESSING','PENDING_REVIEW','OFFICER_REVIEW_COMPLETED','ADMIN_REVIEW_PENDING','VERIFIED','POTENTIAL_NON_COMPLIANCE_CONFIRMED','ESCALATED_FOR_ENFORCEMENT_REVIEW','REPORT_GENERATED')) DEFAULT 'DRAFT',
+    location TEXT, notes TEXT, ai_extraction_json TEXT, ai_diagnostics_json TEXT, vision_extraction_json TEXT, vision_diagnostics_json TEXT, vision_cache_key TEXT, vision_completed_at TEXT,
+    admin_decision TEXT CHECK (admin_decision IN ('VERIFIED','POTENTIAL_NON_COMPLIANCE_CONFIRMED','ESCALATED_FOR_ENFORCEMENT_REVIEW')), admin_decision_comment TEXT, admin_decision_finding_id TEXT REFERENCES findings(id), admin_decision_finding_ids_json TEXT, admin_decided_by TEXT REFERENCES users(id), admin_decided_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  INSERT INTO inspections_migrated SELECT id, inspection_number, product_id, officer_id,
+    CASE WHEN admin_decision='PRODUCT_REJECTED' THEN 'ESCALATED_FOR_ENFORCEMENT_REVIEW' WHEN admin_decision='POTENTIAL_ISSUE' THEN 'POTENTIAL_NON_COMPLIANCE_CONFIRMED' WHEN state='VERIFIED' AND admin_decision IS NULL THEN 'OFFICER_REVIEW_COMPLETED' ELSE state END,
+    location, notes, ai_extraction_json, ai_diagnostics_json, vision_extraction_json, vision_diagnostics_json, vision_cache_key, vision_completed_at,
+    CASE WHEN admin_decision='PRODUCT_REJECTED' THEN 'ESCALATED_FOR_ENFORCEMENT_REVIEW' WHEN admin_decision='POTENTIAL_ISSUE' THEN 'POTENTIAL_NON_COMPLIANCE_CONFIRMED' ELSE admin_decision END,
+    admin_decision_comment, admin_decision_finding_id, admin_decision_finding_ids_json, admin_decided_by, admin_decided_at, created_at, updated_at FROM inspections;
+  DROP TABLE inspections; ALTER TABLE inspections_migrated RENAME TO inspections;`);
+  db.pragma('foreign_keys = ON');
+}
+const auditSql = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'audit_logs'").get()?.sql || '';
+if (!auditSql.includes('inspection_id')) {
+  db.pragma('foreign_keys = OFF');
+  db.exec(`CREATE TABLE audit_logs_migrated (id TEXT PRIMARY KEY, actor_user_id TEXT REFERENCES users(id), target_user_id TEXT REFERENCES users(id), inspection_id TEXT, finding_id TEXT, report_id TEXT, action TEXT NOT NULL, metadata_json TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+  INSERT INTO audit_logs_migrated (id, actor_user_id, target_user_id, action, created_at) SELECT id, actor_user_id, target_user_id, action, created_at FROM audit_logs;
+  DROP TABLE audit_logs; ALTER TABLE audit_logs_migrated RENAME TO audit_logs; CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_user_id, created_at); CREATE INDEX IF NOT EXISTS idx_audit_logs_inspection ON audit_logs(inspection_id, created_at);`);
   db.pragma('foreign_keys = ON');
 }
 

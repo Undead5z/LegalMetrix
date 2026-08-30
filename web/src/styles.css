@@ -124,3 +124,17 @@
 :root[data-theme="light"] .stat-card p,:root[data-theme="light"] .access-stat>span,:root[data-theme="light"] .filter-chip,:root[data-theme="light"] .filter-chip--active,:root[data-theme="light"] .row strong,:root[data-theme="light"] .inspection-row strong,:root[data-theme="light"] .user-link,:root[data-theme="light"] .user-link strong{color:#0b1f30}
 
 :root[data-theme="light"] .detail-grid .button--secondary,:root[data-theme="light"] .decision-actions .button--secondary{background:#cbdee8;border-color:#9dbdce;color:#0b1f30}
+
+/* Keep long administrative status badges within their own inspection-list column. */ 
+.inspection-row { grid-template-columns: minmax(210px, 1.15fr) minmax(145px, .85fr) minmax(150px, .85fr) minmax(325px, 1.4fr) minmax(220px, 1.2fr); min-width: 1050px; } 
+.inspection-row .status { justify-self: start; white-space: nowrap; } 
+.inspection-row .issue-summary { min-width: 0; } 
+ 
+
+/* Compact, centred inspection-list statuses. Long outcomes wrap inside their own badge. */
+.inspection-row { grid-template-columns: minmax(180px, 1.2fr) minmax(135px, 1fr) minmax(130px, .9fr) minmax(155px, 1fr) minmax(170px, 1.2fr); min-width: 0; }
+.inspection-row .status { justify-self: center; min-width: 0; min-height: 0; padding: 5px 9px; white-space: nowrap; line-height: normal; text-align: center; }
+.inspection-row .status--ESCALATED_FOR_ENFORCEMENT_REVIEW, .inspection-row .status--OFFICER_REVIEW_COMPLETED, .inspection-row .status--ADMIN_REVIEW_PENDING, .inspection-row .status--POTENTIAL_NON_COMPLIANCE_CONFIRMED { max-width: 150px; white-space: normal; line-height: 1.35; text-align: center; }
+ 
+/* Tight long-outcome badges: two readable lines without unused width or height. */ 
+.inspection-row .status--ESCALATED_FOR_ENFORCEMENT_REVIEW, .inspection-row .status--OFFICER_REVIEW_COMPLETED, .inspection-row .status--ADMIN_REVIEW_PENDING, .inspection-row .status--POTENTIAL_NON_COMPLIANCE_CONFIRMED { width: 136px; max-width: calc(100% - 8px); min-height: 0; padding: 4px 6px; line-height: 1.25; } 
