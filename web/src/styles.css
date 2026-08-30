@@ -138,3 +138,8 @@
  
 /* Tight long-outcome badges: two readable lines without unused width or height. */ 
 .inspection-row .status--ESCALATED_FOR_ENFORCEMENT_REVIEW, .inspection-row .status--OFFICER_REVIEW_COMPLETED, .inspection-row .status--ADMIN_REVIEW_PENDING, .inspection-row .status--POTENTIAL_NON_COMPLIANCE_CONFIRMED { width: 136px; max-width: calc(100% - 8px); min-height: 0; padding: 4px 6px; line-height: 1.25; } 
+ 
+/* Dashboard recent-inspections statuses use the same compact treatment. */ 
+.recent-inspections-table .row { grid-template-columns: 1.15fr 1.35fr minmax(145px, .9fr) .85fr; } 
+.recent-inspections-table .status { justify-self: center; min-width: 0; padding: 5px 9px; text-align: center; } 
+.recent-inspections-table .status--ESCALATED_FOR_ENFORCEMENT_REVIEW, .recent-inspections-table .status--OFFICER_REVIEW_COMPLETED, .recent-inspections-table .status--ADMIN_REVIEW_PENDING, .recent-inspections-table .status--POTENTIAL_NON_COMPLIANCE_CONFIRMED { width: 136px; max-width: calc(100% - 8px); padding: 4px 6px; white-space: normal; line-height: 1.25; text-align: center; } 
