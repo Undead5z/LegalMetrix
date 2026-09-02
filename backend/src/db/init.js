@@ -59,6 +59,15 @@ if (!inspectionTableSql.includes('OFFICER_REVIEW_COMPLETED')) {
   DROP TABLE inspections; ALTER TABLE inspections_migrated RENAME TO inspections;`);
   db.pragma('foreign_keys = ON');
 }
+// Normalize any records left by an interrupted/partial legacy migration without deleting inspections.
+const legacyStatusCount = db.prepare("SELECT COUNT(*) AS count FROM inspections WHERE state IN ('PRODUCT_REJECTED', 'POTENTIAL_ISSUE') OR admin_decision IN ('PRODUCT_REJECTED', 'POTENTIAL_ISSUE')").get().count;
+if (legacyStatusCount) {
+  db.pragma('wal_checkpoint(TRUNCATE)');
+  const sourcePath = db.name || path.join(__dirname, '../../data/legalmetrix.db');
+  if (fs.existsSync(sourcePath) && !fs.existsSync(backupPath)) fs.copyFileSync(sourcePath, backupPath);
+  db.exec("UPDATE inspections SET state = CASE state WHEN 'PRODUCT_REJECTED' THEN 'ESCALATED_FOR_ENFORCEMENT_REVIEW' WHEN 'POTENTIAL_ISSUE' THEN 'POTENTIAL_NON_COMPLIANCE_CONFIRMED' ELSE state END, admin_decision = CASE admin_decision WHEN 'PRODUCT_REJECTED' THEN 'ESCALATED_FOR_ENFORCEMENT_REVIEW' WHEN 'POTENTIAL_ISSUE' THEN 'POTENTIAL_NON_COMPLIANCE_CONFIRMED' ELSE admin_decision END WHERE state IN ('PRODUCT_REJECTED', 'POTENTIAL_ISSUE') OR admin_decision IN ('PRODUCT_REJECTED', 'POTENTIAL_ISSUE')");
+}
+
 const auditSql = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'audit_logs'").get()?.sql || '';
 if (!auditSql.includes('inspection_id')) {
   db.pragma('foreign_keys = OFF');
@@ -90,7 +99,7 @@ ensureColumn('inspections', 'vision_extraction_json', 'TEXT');
 ensureColumn('inspections', 'vision_diagnostics_json', 'TEXT');
 ensureColumn('inspections', 'vision_cache_key', 'TEXT');
 ensureColumn('inspections', 'vision_completed_at', 'TEXT');
-ensureColumn('inspections', 'admin_decision', "TEXT CHECK (admin_decision IN ('VERIFIED', 'POTENTIAL_ISSUE', 'PRODUCT_REJECTED'))");
+ensureColumn('inspections', 'admin_decision', "TEXT CHECK (admin_decision IN ('VERIFIED', 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW'))");
 ensureColumn('inspections', 'admin_decision_comment', 'TEXT');
 ensureColumn('inspections', 'admin_decision_finding_id', 'TEXT REFERENCES findings(id)');
 ensureColumn('inspections', 'admin_decision_finding_ids_json', 'TEXT');

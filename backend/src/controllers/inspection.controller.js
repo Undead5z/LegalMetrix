@@ -11,6 +11,9 @@ const evidenceMerger = require('../services/evidence-merger.service');
 const ruleEngine = require('../services/rule-engine.service');
 const pdfReportService = require('../services/pdf-report.service');
 const { logAuditEvent } = require('../services/audit-log.service');
+const { ADMIN_DECISIONS, INSPECTION_STATUS, POTENTIAL_OUTCOME_DECISIONS } = require('../constants/inspection-status');
+
+const potentialDecisionSql = POTENTIAL_OUTCOME_DECISIONS.map(status => `'${status}'`).join(', ');
 
 const createSchema = z.object({
   productName: z.string().trim().min(1).max(200),
@@ -21,11 +24,11 @@ const createSchema = z.object({
 });
 const reviewSchema = z.object({ officerDecision: z.enum(['CONFIRMED', 'REJECTED']), officerComment: z.string().trim().max(2000).optional().nullable() });
 const adminDecisionSchema = z.object({
-  decision: z.enum(['VERIFIED', 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW']),
+  decision: z.enum(ADMIN_DECISIONS),
   findingIds: z.array(z.string().uuid()).max(20).optional().default([]),
   comment: z.string().trim().max(2000).optional().nullable()
 }).superRefine((data, context) => {
-  if (data.decision !== 'VERIFIED' && !data.findingIds.length) context.addIssue({ code: z.ZodIssueCode.custom, path: ['findingIds'], message: 'Select at least one automated finding that supports this decision.' });
+  if (data.decision !== INSPECTION_STATUS.VERIFIED && !data.findingIds.length) context.addIssue({ code: z.ZodIssueCode.custom, path: ['findingIds'], message: 'Select at least one automated finding that supports this decision.' });
 });
 
 const inspectionQuery = `SELECT i.*, p.product_name, p.generic_name, p.brand_name,
@@ -43,6 +46,7 @@ const inspectionQuery = `SELECT i.*, p.product_name, p.generic_name, p.brand_nam
 function isAdmin(user) { return ['MASTER_ADMIN', 'ADMIN'].includes(user.role); }
 function fetchInspection(id) { return db.prepare(`${inspectionQuery} WHERE i.id = ?`).get(id); }
 function assertOfficerOwner(inspection, user) { assertAccess(inspection, user); if (user.role !== 'FIELD_OFFICER' || inspection.officer_id !== user.sub) throw new AppError(403, 'Only the assigned Field Officer can perform this workflow action.'); }
+function assertFindingReviewer(inspection, user) { if (isAdmin(user)) return assertAccess(inspection, user); return assertOfficerOwner(inspection, user); }
 function assertAccess(inspection, user) {
   if (!inspection) throw new AppError(404, 'Inspection was not found.');
   if (!isAdmin(user) && inspection.officer_id !== user.sub) throw new AppError(403, 'You cannot access this inspection.');
@@ -89,9 +93,9 @@ function listInspections(req, res) {
   const clauses = [];
   const values = [];
   if (!isAdmin(req.user)) { clauses.push('i.officer_id = ?'); values.push(req.user.sub); }
-  if (state === 'PENDING_REVIEW') clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
+  if (state === INSPECTION_STATUS.PENDING_REVIEW) clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
   else if (state) { clauses.push('i.state = ?'); values.push(state); }
-  if (issue === 'potential') clauses.push("(i.admin_decision IN ('POTENTIAL_NON_COMPLIANCE_CONFIRMED', 'ESCALATED_FOR_ENFORCEMENT_REVIEW') OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))");
+  if (issue === 'potential') clauses.push(`(i.admin_decision IN (${potentialDecisionSql}) OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))`);
   if (search) { clauses.push('(p.product_name LIKE ? OR i.inspection_number LIKE ? OR u.full_name LIKE ?)'); values.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
@@ -146,7 +150,7 @@ async function analyzeInspection(req, res) {
   const recoveryState = inspection.state === 'PROCESSING' ? 'DRAFT' : inspection.state;
   try {
   db.prepare("UPDATE inspections SET state = 'PROCESSING', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
-  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_STARTED' });
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_STARTED', metadata: { actorRole: req.user.role } });
   const ocr = await ocrService.readImages(images);
   const deterministicExtraction = await extractionService.extractDeclarations(ocr);
   const visionImages = images.map(image => ({ ...image, ocr_hint: ocr.images.find(result => result.imageId === image.id)?.normalizedText || '' }));
@@ -174,7 +178,7 @@ async function analyzeInspection(req, res) {
   });
   saveFindings();
   db.prepare("UPDATE inspections SET state = 'PENDING_REVIEW', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
-  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_COMPLETED', metadata: { ocrState: ocr.state, visionFallback: Boolean(visionExtraction.diagnostics?.fallbackUsed) } });
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_COMPLETED', metadata: { actorRole: req.user.role, ocrState: ocr.state, visionFallback: Boolean(visionExtraction.diagnostics?.fallbackUsed) } });
   res.status(202).json({ inspection: inspectionResponse(fetchInspection(inspection.id)), analysis: { state: ocr.state, message: 'Preliminary analysis completed and stored.', ocr, ocrOnlyExtraction: deterministicExtraction, extraction, aiExtraction: visionExtraction.diagnostics, visionExtraction: visionExtraction.diagnostics, assessment } });
   } catch (error) {
     db.prepare('UPDATE inspections SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(recoveryState, inspection.id);
@@ -195,13 +199,14 @@ function reviewFinding(req, res) {
   const finding = db.prepare('SELECT * FROM findings WHERE id = ?').get(req.params.id);
   if (!finding) throw new AppError(404, 'Finding was not found.');
   const inspection = fetchInspection(finding.inspection_id);
-  assertOfficerOwner(inspection, req.user);
-  if (inspection.state !== 'PENDING_REVIEW') throw new AppError(409, 'Findings can only be reviewed while the inspection is pending Field Officer review.');
+  assertFindingReviewer(inspection, req.user);
+  const adminReviewer = isAdmin(req.user);
+  if (inspection.state !== 'PENDING_REVIEW' && !(adminReviewer && inspection.state === 'OFFICER_REVIEW_COMPLETED')) throw new AppError(409, 'Findings can only be reviewed while the inspection is pending review.');
   db.prepare(`UPDATE findings SET officer_decision = ?, officer_comment = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .run(parsed.data.officerDecision, parsed.data.officerComment || null, req.user.sub, finding.id);
   const unreviewed = db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND officer_decision IS NULL').get(finding.inspection_id).count;
-  if (!unreviewed) { db.prepare("UPDATE inspections SET state = 'OFFICER_REVIEW_COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id); logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, action: 'OFFICER_REVIEW_COMPLETED' }); }
-  logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, findingId: finding.id, action: `FINDING_${parsed.data.officerDecision}` });
+  if (!unreviewed && inspection.state === 'PENDING_REVIEW') { db.prepare("UPDATE inspections SET state = 'OFFICER_REVIEW_COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(finding.inspection_id); logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, action: adminReviewer ? 'ADMIN_FINDING_REVIEW_COMPLETED' : 'OFFICER_REVIEW_COMPLETED', metadata: { actorRole: req.user.role } }); }
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: finding.inspection_id, findingId: finding.id, action: `FINDING_${parsed.data.officerDecision}`, metadata: { actorRole: req.user.role } });
   res.json({ finding: db.prepare('SELECT * FROM findings WHERE id = ?').get(finding.id) });
 }
 

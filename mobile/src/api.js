@@ -1,4 +1,5 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
+// Use a publicly reachable HTTPS backend URL for physical devices on any network. No localhost fallback is used because localhost points to the phone itself.
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '');
 
 export async function request(path, { token, method = 'GET', body } = {}) {
   let response;
