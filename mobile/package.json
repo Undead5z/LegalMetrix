@@ -11,10 +11,16 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "~54.0.0",
-    "expo-asset": "~12.0.13",
-    "expo-image-picker": "~17.0.11",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
+    "expo": "^57.0.20",
+    "expo-asset": "~57.0.16",
+    "expo-blob": "^57.0.1",
+    "expo-file-system": "~57.0.6",
+    "expo-image-picker": "~57.0.16",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
+  },
+  "devDependencies": {
+    "@expo/ngrok": "^4.1.3"
   }
 }

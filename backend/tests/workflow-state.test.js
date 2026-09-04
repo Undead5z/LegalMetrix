@@ -46,6 +46,11 @@ await inspection.setAdminDecision({ params: { id: inspectionId }, user: { sub: a
 assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionId).state, 'VERIFIED');
 assert.equal(db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(inspectionId).admin_decision, 'VERIFIED');
 
+// An administrator may still correct a finding after a final decision; the final state is preserved.
+inspection.reviewFinding({ params: { id: findingTwo }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { officerDecision: 'REJECTED', officerComment: 'Post-decision administrative correction.' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionId).state, 'VERIFIED');
+assert.equal(db.prepare('SELECT reviewed_by FROM findings WHERE id = ?').get(findingTwo).reviewed_by, admin.id);
+
 // An authorized Admin may manually verify despite automated findings, preserving the finding and override audit metadata.
 const productTwo = '10000000-0000-4000-8000-000000000002'; const inspectionTwo = '20000000-0000-4000-8000-000000000002'; const issueFinding = '30000000-0000-4000-8000-000000000003';
 db.prepare('INSERT INTO products (id, product_name) VALUES (?, ?)').run(productTwo, 'Unresolved finding test');

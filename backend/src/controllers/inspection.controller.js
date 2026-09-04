@@ -201,7 +201,9 @@ function reviewFinding(req, res) {
   const inspection = fetchInspection(finding.inspection_id);
   assertFindingReviewer(inspection, req.user);
   const adminReviewer = isAdmin(req.user);
-  if (inspection.state !== 'PENDING_REVIEW' && !(adminReviewer && inspection.state === 'OFFICER_REVIEW_COMPLETED')) throw new AppError(409, 'Findings can only be reviewed while the inspection is pending review.');
+  const fieldOfficerReviewable = inspection.state === 'PENDING_REVIEW';
+  const adminReviewable = adminReviewer && !['DRAFT', 'PROCESSING'].includes(inspection.state);
+  if (!fieldOfficerReviewable && !adminReviewable) throw new AppError(409, 'Field Officers can review findings only while an inspection is pending review.');
   db.prepare(`UPDATE findings SET officer_decision = ?, officer_comment = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .run(parsed.data.officerDecision, parsed.data.officerComment || null, req.user.sub, finding.id);
   const unreviewed = db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ? AND officer_decision IS NULL').get(finding.inspection_id).count;
