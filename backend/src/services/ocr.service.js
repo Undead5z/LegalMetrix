@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { recognize, PSM } = require('tesseract.js');
+const env = require('../config/env');
+const { resolveStoredPath, toStoredPath } = require('./storage.service');
 
 function variance(values) { const mean = values.reduce((a, b) => a + b, 0) / values.length; return values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length; }
 function normalizeOcrText(text = '') {
@@ -12,15 +14,15 @@ function normalizeOcrText(text = '') {
     .replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 }
 async function prepareImage(image) {
-  const source = path.resolve(__dirname, '../..', image.storage_path);
+  const source = resolveStoredPath(image.storage_path);
   const metadata = await sharp(source).metadata();
   // This derivative is OCR-only. The original uploaded evidence is never modified.
   const processed = await sharp(source).rotate().resize({ width: 3000, withoutEnlargement: false }).grayscale().normalise().median(3).sharpen({ sigma: 1.2 }).png().toBuffer();
-  const outputDir = path.resolve(__dirname, '../../uploads/ocr'); fs.mkdirSync(outputDir, { recursive: true });
+  const outputDir = path.join(env.uploadDir, 'ocr'); fs.mkdirSync(outputDir, { recursive: true });
   const outputPath = path.join(outputDir, `${image.id}.png`); await fs.promises.writeFile(outputPath, processed);
   const sample = await sharp(processed).resize({ width: 160, height: 160, fit: 'inside', withoutEnlargement: true }).raw().toBuffer({ resolveWithObject: true });
   const pixels = [...sample.data]; const contrast = Math.sqrt(variance(pixels)); const tooSmall = (metadata.width || 0) * (metadata.height || 0) < 100000;
-  return { processed, outputPath: path.relative(path.resolve(__dirname, '../..'), outputPath).replace(/\\/g, '/'), metrics: { width: metadata.width, height: metadata.height, ocrWidth: 3000, contrast: Number(contrast.toFixed(1)), orientation: metadata.orientation || 1 }, inadequate: tooSmall || contrast < 10, reason: tooSmall ? 'Image resolution is too low.' : contrast < 10 ? 'Label contrast is too low.' : null };
+  return { processed, outputPath: toStoredPath(outputPath), metrics: { width: metadata.width, height: metadata.height, ocrWidth: 3000, contrast: Number(contrast.toFixed(1)), orientation: metadata.orientation || 1 }, inadequate: tooSmall || contrast < 10, reason: tooSmall ? 'Image resolution is too low.' : contrast < 10 ? 'Label contrast is too low.' : null };
 }
 async function recognizeRegions(buffer) {
   const meta = await sharp(buffer).metadata(); const width = meta.width; const height = meta.height;

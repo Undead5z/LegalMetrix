@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('./database');
+const env = require('../config/env');
 
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 db.exec(schema);
@@ -135,14 +136,20 @@ const seedUser = (fullName, email, password, role, employeeId) => {
   return id;
 };
 
-// Development-only credentials. Change or remove these before any deployment.
-const masterEmail = 'admin@legalmetrix.local';
-seedUser('LegalMetrix Master Admin', masterEmail, 'Admin@123', 'MASTER_ADMIN', 'MA-0001');
-db.prepare("UPDATE users SET role = 'ADMIN', account_status = 'APPROVED' WHERE role = 'MASTER_ADMIN' AND lower(email) <> ?").run(masterEmail);
-db.prepare("UPDATE users SET role = 'MASTER_ADMIN', account_status = 'APPROVED', employee_id = COALESCE(employee_id, 'MA-0001'), approved_by = NULL, rejected_by = NULL, rejected_at = NULL, reviewer_note = NULL, approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP) WHERE lower(email) = ?").run(masterEmail);
-seedUser('Field Officer', 'officer@legalmetrix.local', 'Officer@123', 'FIELD_OFFICER', 'FO-0001');
-db.prepare("UPDATE users SET role = 'FIELD_OFFICER', account_status = 'APPROVED', employee_id = COALESCE(employee_id, 'FO-0001'), approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP) WHERE lower(email) = 'officer@legalmetrix.local'").run();
-db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_one_master_admin ON users(role) WHERE role = 'MASTER_ADMIN'; CREATE UNIQUE INDEX IF NOT EXISTS idx_users_employee_id ON users(employee_id) WHERE employee_id IS NOT NULL;");
+// Development-only credentials are never created or promoted in production unless explicitly requested.
+const shouldSeedDevelopmentUsers = env.nodeEnv !== 'production' || process.env.SEED_DEVELOPMENT_USERS === 'true';
+if (shouldSeedDevelopmentUsers) {
+  // Development-only credentials. Change or remove these before any deployment.
+  const masterEmail = 'admin@legalmetrix.local';
+  seedUser('LegalMetrix Master Admin', masterEmail, 'Admin@123', 'MASTER_ADMIN', 'MA-0001');
+  db.prepare("UPDATE users SET role = 'ADMIN', account_status = 'APPROVED' WHERE role = 'MASTER_ADMIN' AND lower(email) <> ?").run(masterEmail);
+  db.prepare("UPDATE users SET role = 'MASTER_ADMIN', account_status = 'APPROVED', employee_id = COALESCE(employee_id, 'MA-0001'), approved_by = NULL, rejected_by = NULL, rejected_at = NULL, reviewer_note = NULL, approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP) WHERE lower(email) = ?").run(masterEmail);
+  seedUser('Field Officer', 'officer@legalmetrix.local', 'Officer@123', 'FIELD_OFFICER', 'FO-0001');
+  db.prepare("UPDATE users SET role = 'FIELD_OFFICER', account_status = 'APPROVED', employee_id = COALESCE(employee_id, 'FO-0001'), approved_at = COALESCE(approved_at, CURRENT_TIMESTAMP) WHERE lower(email) = 'officer@legalmetrix.local'").run();
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_one_master_admin ON users(role) WHERE role = 'MASTER_ADMIN'; CREATE UNIQUE INDEX IF NOT EXISTS idx_users_employee_id ON users(employee_id) WHERE employee_id IS NOT NULL;");
+} else {
+  console.log('Production mode: development user seeding skipped.');
+}
 
 const rules = require('../config/mvp-rules');
 const upsertRule = db.prepare(`INSERT INTO rules (id, rule_code, name, declaration_field, requirement, applicability, legal_reference, version, effective_date, effective_to, validation_type, validation_logic, status)
@@ -150,4 +157,4 @@ const upsertRule = db.prepare(`INSERT INTO rules (id, rule_code, name, declarati
   ON CONFLICT(rule_code) DO UPDATE SET name=excluded.name, requirement=excluded.requirement, applicability=excluded.applicability, legal_reference=excluded.legal_reference, version=excluded.version, effective_date=excluded.effective_date, effective_to=excluded.effective_to, validation_type=excluded.validation_type, validation_logic=excluded.validation_logic, status='ACTIVE', updated_at=CURRENT_TIMESTAMP`);
 rules.forEach(rule => upsertRule.run(crypto.randomUUID(), rule.ruleCode, rule.name, rule.field, rule.requirement, rule.applicability, rule.legalReference, rule.version, rule.effectiveFrom, rule.effectiveTo, rule.validationType, JSON.stringify({ validationType: rule.validationType })));
 
-console.log('LegalMetrix SQLite schema initialized, development users and MVP rules seeded.');
+console.log(`LegalMetrix SQLite schema initialized, MVP rules seeded${shouldSeedDevelopmentUsers ? ', development users seeded.' : ', production user seeding skipped.'}`);

@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
 const { z } = require('zod');
 const db = require('../db/database');
@@ -12,6 +11,7 @@ const ruleEngine = require('../services/rule-engine.service');
 const pdfReportService = require('../services/pdf-report.service');
 const { logAuditEvent } = require('../services/audit-log.service');
 const { ADMIN_DECISIONS, INSPECTION_STATUS, POTENTIAL_OUTCOME_DECISIONS } = require('../constants/inspection-status');
+const { resolveStoredPath, toStoredPath, removeStoredFiles } = require('../services/storage.service');
 
 const potentialDecisionSql = POTENTIAL_OUTCOME_DECISIONS.map(status => `'${status}'`).join(', ');
 
@@ -51,7 +51,6 @@ function assertAccess(inspection, user) {
   if (!inspection) throw new AppError(404, 'Inspection was not found.');
   if (!isAdmin(user) && inspection.officer_id !== user.sub) throw new AppError(403, 'You cannot access this inspection.');
 }
-function removeStoredFiles(paths) { const uploadsRoot = path.resolve(__dirname, '../../uploads'); for (const storedPath of paths.filter(Boolean)) { const absolute = path.resolve(__dirname, '../..', storedPath); if (absolute.startsWith(`${uploadsRoot}${path.sep}`)) fs.rmSync(absolute, { force: true }); } }
 function decisionFindingIds(inspection) {
   try {
     const ids = JSON.parse(inspection.admin_decision_finding_ids_json || '[]');
@@ -133,7 +132,7 @@ function addImages(req, res) {
   const insert = db.prepare(`INSERT INTO inspection_images (id, inspection_id, image_type, original_filename, storage_path, mime_type, size_bytes)
     VALUES (?, ?, ?, ?, ?, ?, ?)`);
   const transaction = db.transaction(() => req.files.forEach((file) => insert.run(
-    crypto.randomUUID(), inspection.id, imageType, file.originalname, path.relative(path.resolve(__dirname, '../..'), file.path).replace(/\\/g, '/'), file.mimetype, file.size
+    crypto.randomUUID(), inspection.id, imageType, file.originalname, toStoredPath(file.path), file.mimetype, file.size
   )));
   transaction();
   db.prepare("UPDATE inspections SET state = 'DRAFT', vision_cache_key = NULL, vision_extraction_json = NULL, vision_diagnostics_json = NULL, vision_completed_at = NULL, admin_decision = NULL, admin_decision_comment = NULL, admin_decision_finding_id = NULL, admin_decision_finding_ids_json = NULL, admin_decided_by = NULL, admin_decided_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
@@ -190,7 +189,7 @@ function getImageFile(req, res) {
   const inspection = fetchInspection(req.params.id); assertAccess(inspection, req.user);
   const image = db.prepare('SELECT * FROM inspection_images WHERE id = ? AND inspection_id = ?').get(req.params.imageId, inspection.id);
   if (!image) throw new AppError(404, 'Inspection image was not found.');
-  res.type(image.mime_type).sendFile(path.resolve(__dirname, '../..', image.storage_path));
+  res.type(image.mime_type).sendFile(resolveStoredPath(image.storage_path));
 }
 
 function reviewFinding(req, res) {
@@ -275,7 +274,7 @@ function getReportFile(req, res) {
   if (!report) throw new AppError(404, 'Generated report was not found.');
   if (!isAdmin(req.user) && report.officer_id !== req.user.sub) throw new AppError(403, 'You cannot access this report.');
   if (!report.storage_path) throw new AppError(404, 'Generated report file is unavailable.');
-  const filePath = path.resolve(__dirname, '../..', report.storage_path);
+  const filePath = resolveStoredPath(report.storage_path);
   if (req.query.download === '1') { logAuditEvent({ actorUserId: req.user.sub, inspectionId: report.inspection_id, reportId: report.id, action: 'REPORT_DOWNLOADED', metadata: { reportNumber: report.report_number } }); return res.download(filePath, `${report.report_number}.pdf`); }
   res.type('application/pdf'); res.set('Content-Disposition', `inline; filename="${report.report_number}.pdf"`); return res.sendFile(filePath);
 }

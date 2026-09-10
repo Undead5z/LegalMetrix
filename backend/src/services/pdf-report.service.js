@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const db = require('../db/database');
+const env = require('../config/env');
+const { resolveStoredPath, toStoredPath } = require('./storage.service');
 
 const rootDir = path.resolve(__dirname, '../..');
 const disclaimer = 'LegalMetrix provides AI-assisted preliminary compliance assessment. Final determination and statutory action remain with the competent authorized authority.';
@@ -54,8 +56,8 @@ function buildPdf(textPages, imagePages) {
 async function generateReport({ inspectionId, reportNumber }) {
   const data = storedReportData(inspectionId); const lines = textLines(data, reportNumber); const textPages = []; for (let i = 0; i < lines.length; i += 66) textPages.push(lines.slice(i, i + 66));
   const imagePages = [];
-  for (const image of data.images) { const source = path.resolve(rootDir, image.storage_path); const converted = await sharp(source).rotate().resize({ width: 1400, height: 1400, fit: 'inside', withoutEnlargement: true }).flatten({ background: '#ffffff' }).jpeg({ quality: 82 }).toBuffer({ resolveWithObject: true }); imagePages.push({ buffer: converted.data, width: converted.info.width, height: converted.info.height, side: image.image_type, filename: image.original_filename }); }
-  const outputDir = path.resolve(rootDir, 'uploads/reports'); await fs.promises.mkdir(outputDir, { recursive: true }); const outputPath = path.join(outputDir, `${reportNumber}.pdf`); await fs.promises.writeFile(outputPath, buildPdf(textPages, imagePages));
-  return { state: 'GENERATED', message: 'Inspection PDF generated from stored inspection data.', storagePath: path.relative(rootDir, outputPath).replace(/\\/g, '/'), pageCount: textPages.length + imagePages.length };
+  for (const image of data.images) { const source = resolveStoredPath(image.storage_path); const converted = await sharp(source).rotate().resize({ width: 1400, height: 1400, fit: 'inside', withoutEnlargement: true }).flatten({ background: '#ffffff' }).jpeg({ quality: 82 }).toBuffer({ resolveWithObject: true }); imagePages.push({ buffer: converted.data, width: converted.info.width, height: converted.info.height, side: image.image_type, filename: image.original_filename }); }
+  const outputDir = env.reportDir; await fs.promises.mkdir(outputDir, { recursive: true }); const outputPath = path.join(outputDir, `${reportNumber}.pdf`); await fs.promises.writeFile(outputPath, buildPdf(textPages, imagePages));
+  return { state: 'GENERATED', message: 'Inspection PDF generated from stored inspection data.', storagePath: toStoredPath(outputPath), pageCount: textPages.length + imagePages.length };
 }
 module.exports = { generateReport, storedReportData };
