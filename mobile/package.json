@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "^57.0.20",
+    "expo": "~57.0.21",
     "expo-asset": "~57.0.16",
     "expo-blob": "^57.0.1",
     "expo-file-system": "~57.0.6",
