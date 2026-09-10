@@ -16,21 +16,26 @@ const db = new Database(env.databasePath, { readonly: true, fileMustExist: true 
 const images = db.prepare('SELECT id, storage_path, ocr_storage_path FROM inspection_images').all();
 const reports = db.prepare('SELECT id, storage_path FROM reports WHERE storage_path IS NOT NULL').all();
 db.close();
-const references = [...images.flatMap(image => [image.storage_path, image.ocr_storage_path]).filter(Boolean), ...reports.map(report => report.storage_path)];
-const resolved = references.map(storedPath => ({ storedPath, absolutePath: resolveStoredPath(storedPath) }));
-const missing = resolved.filter(item => !fs.existsSync(item.absolutePath));
+const inspect = paths => paths.filter(Boolean).map(storedPath => ({ storedPath, absolutePath: resolveStoredPath(storedPath) }));
+const originalReferences = inspect(images.map(image => image.storage_path));
+const ocrDerivatives = inspect(images.map(image => image.ocr_storage_path));
+const reportReferences = inspect(reports.map(report => report.storage_path));
+const missing = entries => entries.filter(item => !fs.existsSync(item.absolutePath));
+const missingOriginals = missing(originalReferences);
+const missingReports = missing(reportReferences);
+const missingOcrDerivatives = missing(ocrDerivatives);
 const files = listFiles(env.uploadDir).map(file => path.resolve(file));
-const referenced = new Set(resolved.map(item => path.resolve(item.absolutePath)));
-const orphanFiles = files.filter(file => !referenced.has(file));
+const referenced = new Set([...originalReferences, ...ocrDerivatives, ...reportReferences].map(item => path.resolve(item.absolutePath)));
+const orphanFiles = files.filter(file => path.basename(file) !== '.gitkeep' && !referenced.has(file));
 console.log(JSON.stringify({
   database: env.databasePath,
   uploadDir: env.uploadDir,
   imageRecords: images.length,
   reportRecords: reports.length,
-  referencedFiles: references.length,
-  filesFound: references.length - missing.length,
-  missingFiles: missing,
+  originals: { referenced: originalReferences.length, found: originalReferences.length - missingOriginals.length, missing: missingOriginals },
+  reports: { referenced: reportReferences.length, found: reportReferences.length - missingReports.length, missing: missingReports },
+  ocrDerivatives: { referenced: ocrDerivatives.length, found: ocrDerivatives.length - missingOcrDerivatives.length, missing: missingOcrDerivatives, note: 'OCR derivatives are optional; the source images and stored OCR text remain available.' },
   uploadFiles: files.length,
   orphanFiles
 }, null, 2));
-process.exitCode = missing.length ? 2 : 0;
+process.exitCode = missingOriginals.length || missingReports.length ? 2 : 0;

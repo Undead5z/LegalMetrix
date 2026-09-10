@@ -96,4 +96,4 @@ inspections: 15
 inspection_images: 35
 ```
 
-The verifier reports missing referenced files, upload-file count, orphan files, and report references. It exits non-zero if any database-referenced file is missing.
+The verifier reports original evidence, report files, optional OCR derivatives, upload-file count, and orphan files. It exits non-zero only when an original evidence image or stored report is missing.
