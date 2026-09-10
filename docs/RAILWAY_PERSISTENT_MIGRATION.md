@@ -10,7 +10,7 @@ Configure the Railway service with:
 NODE_ENV=production
 DATABASE_PATH=/app/persist/legalmetrix.db
 UPLOAD_DIR=/app/persist/uploads
-REPORT_DIR=/app/persist/uploads/reports
+REPORT_DIR=/app/persist/reports
 ```
 
 `NODE_ENV=production` prevents development bootstrap users from being created. The existing database is preserved; schema migrations and rules remain additive/non-destructive.
