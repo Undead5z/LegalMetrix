@@ -3,13 +3,14 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const rootDir = path.resolve(__dirname, '../..');
+const defaultCorsOrigins = ['http://localhost:5173', 'https://legal-metrix.vercel.app'];
 
 module.exports = {
   host: process.env.HOST || '0.0.0.0',
   port: Number(process.env.PORT || 4000),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'development-only-change-me',
-  corsOrigins: (process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean),
+  corsOrigins: (process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || defaultCorsOrigins.join(',')).split(',').map(origin => origin.trim()).filter(Boolean),
   databasePath: path.resolve(rootDir, process.env.DATABASE_PATH || './data/legalmetrix.db'),
   uploadDir: path.resolve(rootDir, process.env.UPLOAD_DIR || './uploads'),
   visionAiProvider: process.env.VISION_AI_PROVIDER || 'openrouter',
