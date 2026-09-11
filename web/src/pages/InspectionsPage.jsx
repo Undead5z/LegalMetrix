@@ -6,7 +6,8 @@ import { INSPECTION_STATUS, INSPECTION_STATUS_META, inspectionDisplayStatus, isP
 import { StatusBadge } from '../components/StatusBadge';
 import { EmptyState } from '../components/EmptyState';
 
-const filterKeys = ['search', 'state', 'issue', 'from', 'to'];
+const filterKeys = ['search', 'state', 'issue', 'productCondition', 'from', 'to'];
+const productConditionValues = ['EXPIRED', 'NEAR_EXPIRY', 'VALID', 'UNKNOWN'];
 const statusFilterValues = Object.values(INSPECTION_STATUS);
 function issueSummary(inspection) {
   const status = inspectionDisplayStatus(inspection);
@@ -43,6 +44,7 @@ export function InspectionsPage() {
   }
 
   const showingPotentialIssues = filters.issue === 'potential';
+  const showingProductCondition = Boolean(filters.productCondition);
   const title = filters.state === INSPECTION_STATUS.VERIFIED ? 'Verified inspections' : showingPotentialIssues ? 'Potential issues' : filters.state === INSPECTION_STATUS.PENDING_REVIEW ? 'Awaiting review' : 'Inspections';
 
   return <>
@@ -50,14 +52,14 @@ export function InspectionsPage() {
     {error && <p className="form-error">{error}</p>}
     <section className="panel form-panel">
       <div className="filter-chip-row" aria-label="Inspection shortcuts">
-        <button className={`filter-chip ${!filters.state && !filters.issue ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: '', issue: '' })}>All inspections</button>
-        <button className={`filter-chip ${filters.state === INSPECTION_STATUS.VERIFIED ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: INSPECTION_STATUS.VERIFIED, issue: '' })}>Verified</button>
-        <button className={`filter-chip ${showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ issue: 'potential', state: '' })}>Potential issues</button>
-        <button className={`filter-chip ${filters.state === INSPECTION_STATUS.PENDING_REVIEW && !showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: INSPECTION_STATUS.PENDING_REVIEW, issue: '' })}>Awaiting review</button>
+        <button className={`filter-chip ${!filters.state && !filters.issue && !filters.productCondition ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: '', issue: '', productCondition: '' })}>All inspections</button>
+        <button className={`filter-chip ${filters.state === INSPECTION_STATUS.VERIFIED ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: INSPECTION_STATUS.VERIFIED, issue: '', productCondition: '' })}>Verified</button>
+        <button className={`filter-chip ${showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ issue: 'potential', state: '', productCondition: '' })}>Potential issues</button><button className={`filter-chip ${filters.productCondition === 'EXPIRED' ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ productCondition: filters.productCondition === 'EXPIRED' ? '' : 'EXPIRED' })}>Expired products</button>
+        <button className={`filter-chip ${filters.state === INSPECTION_STATUS.PENDING_REVIEW && !showingPotentialIssues ? 'filter-chip--active' : ''}`} onClick={() => updateFilters({ state: INSPECTION_STATUS.PENDING_REVIEW, issue: '', productCondition: '' })}>Awaiting review</button>
         <button className={`filter-chip ${filtersOpen ? 'filter-chip--active' : ''}`} onClick={() => setFiltersOpen(open => !open)}>{filtersOpen ? 'Hide filters' : 'Filters'}</button>
       </div>
-      {filtersOpen && <div className="form-grid"><label>Search<input value={filters.search} onChange={event => updateFilters({ search: event.target.value })} placeholder="Product, number, officer" /></label><label>Status<select value={filters.state} onChange={event => updateFilters({ state: event.target.value, issue: event.target.value ? '' : filters.issue })}><option value="">All statuses</option>{statusFilterValues.map(status => <option value={status} key={status}>{INSPECTION_STATUS_META[status].filterLabel}</option>)}</select></label><label>From<input type="date" value={filters.from} onChange={event => updateFilters({ from: event.target.value })} /></label><label>To<input type="date" value={filters.to} onChange={event => updateFilters({ to: event.target.value })} /></label></div>}
+      {filtersOpen && <div className="form-grid"><label>Search<input value={filters.search} onChange={event => updateFilters({ search: event.target.value })} placeholder="Product, number, officer" /></label><label>Status<select value={filters.state} onChange={event => updateFilters({ state: event.target.value, issue: event.target.value ? '' : filters.issue })}><option value="">All statuses</option>{statusFilterValues.map(status => <option value={status} key={status}>{INSPECTION_STATUS_META[status].filterLabel}</option>)}</select></label><label>Product condition<select value={filters.productCondition} onChange={event => updateFilters({ productCondition: event.target.value })}><option value="">All conditions</option>{productConditionValues.map(condition => <option value={condition} key={condition}>{condition.replaceAll('_', ' ')}</option>)}</select></label><label>From<input type="date" value={filters.from} onChange={event => updateFilters({ from: event.target.value })} /></label><label>To<input type="date" value={filters.to} onChange={event => updateFilters({ to: event.target.value })} /></label></div>}
     </section>
-    <section className="panel">{items.length ? <div className="data-table inspection-table"><div className="row inspection-row table-head"><span>Product / inspection</span><span>Officer</span><span>Date / findings</span><span>Status</span><span>Potential issue details</span></div>{items.map(item => <Link className="row inspection-row" to={`/inspections/${item.id}`} key={item.id}><strong>{item.product_name}<small>{item.inspection_number}</small></strong><span>{item.officer_name}</span><span>{new Date(item.created_at + 'Z').toLocaleDateString()}<small>{' '}{item.findings_count} findings</small></span><StatusBadge status={inspectionDisplayStatus(item)} /><span className="issue-summary">{issueSummary(item)}</span></Link>)}</div> : <EmptyState title="No inspections found" detail="Adjust the filters to view another set of inspection records." />}</section>
+    <section className="panel">{items.length ? <div className="data-table inspection-table"><div className="row inspection-row table-head"><span>Product / inspection</span><span>Officer</span><span>Date / findings</span><span>Status</span><span>Potential issue details</span></div>{items.map(item => <Link className="row inspection-row" to={`/inspections/${item.id}`} key={item.id}><strong>{item.product_name}<small>{item.inspection_number}</small></strong><span>{item.officer_name}</span><span>{new Date(item.created_at + 'Z').toLocaleDateString()}<small>{' '}{item.findings_count} findings</small></span><StatusBadge status={inspectionDisplayStatus(item)} /><span className="issue-summary">{showingProductCondition ? `Product condition: ${(item.product_condition || 'UNKNOWN').replaceAll('_', ' ')}` : issueSummary(item)}</span></Link>)}</div> : <EmptyState title="No inspections found" detail="Adjust the filters to view another set of inspection records." />}</section>
   </>;
 }

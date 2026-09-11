@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const { z } = require('zod');
 const db = require('../db/database');
@@ -12,6 +13,8 @@ const pdfReportService = require('../services/pdf-report.service');
 const { logAuditEvent } = require('../services/audit-log.service');
 const { ADMIN_DECISIONS, INSPECTION_STATUS, POTENTIAL_OUTCOME_DECISIONS } = require('../constants/inspection-status');
 const { resolveStoredPath, toStoredPath, removeStoredFiles } = require('../services/storage.service');
+const { evaluateProductCondition } = require('../services/product-condition.service');
+const { evaluateImageQuality, QUALITY_STATE } = require('../services/ocr.service');
 
 const potentialDecisionSql = POTENTIAL_OUTCOME_DECISIONS.map(status => `'${status}'`).join(', ');
 
@@ -51,6 +54,12 @@ function assertAccess(inspection, user) {
   if (!inspection) throw new AppError(404, 'Inspection was not found.');
   if (!isAdmin(user) && inspection.officer_id !== user.sub) throw new AppError(403, 'You cannot access this inspection.');
 }
+function resetInspectionAssessment(inspectionId) {
+  db.prepare("UPDATE inspections SET state = 'DRAFT', product_condition = 'UNKNOWN', product_condition_reason = NULL, product_condition_evaluated_at = NULL, vision_cache_key = NULL, vision_extraction_json = NULL, vision_diagnostics_json = NULL, vision_completed_at = NULL, admin_decision = NULL, admin_decision_comment = NULL, admin_decision_finding_id = NULL, admin_decision_finding_ids_json = NULL, admin_decided_by = NULL, admin_decided_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspectionId);
+  db.prepare('DELETE FROM findings WHERE inspection_id = ?').run(inspectionId);
+  db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspectionId);
+}
+
 function decisionFindingIds(inspection) {
   try {
     const ids = JSON.parse(inspection.admin_decision_finding_ids_json || '[]');
@@ -129,13 +138,14 @@ function createInspection(req, res) {
 }
 
 function listInspections(req, res) {
-  const state = req.query.state; const issue = req.query.issue; const search = req.query.search?.trim(); const from = req.query.from; const to = req.query.to;
+  const state = req.query.state; const issue = req.query.issue; const productCondition = req.query.productCondition; const search = req.query.search?.trim(); const from = req.query.from; const to = req.query.to;
   const clauses = [];
   const values = [];
   if (!isAdmin(req.user)) { clauses.push('i.officer_id = ?'); values.push(req.user.sub); }
   if (state === INSPECTION_STATUS.PENDING_REVIEW) clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
   else if (state) { clauses.push('i.state = ?'); values.push(state); }
   if (issue === 'potential') clauses.push(`(i.admin_decision IN (${potentialDecisionSql}) OR (i.admin_decision IS NULL AND EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE')))`);
+  if (['VALID', 'NEAR_EXPIRY', 'EXPIRED', 'UNKNOWN'].includes(productCondition)) { clauses.push('i.product_condition = ?'); values.push(productCondition); }
   if (search) { clauses.push('(p.product_name LIKE ? OR i.inspection_number LIKE ? OR u.full_name LIKE ?)'); values.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
@@ -176,10 +186,38 @@ function addImages(req, res) {
     crypto.randomUUID(), inspection.id, imageType, file.originalname, toStoredPath(file.path), file.mimetype, file.size
   )));
   transaction();
-  db.prepare("UPDATE inspections SET state = 'DRAFT', vision_cache_key = NULL, vision_extraction_json = NULL, vision_diagnostics_json = NULL, vision_completed_at = NULL, admin_decision = NULL, admin_decision_comment = NULL, admin_decision_finding_id = NULL, admin_decision_finding_ids_json = NULL, admin_decided_by = NULL, admin_decided_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
-  db.prepare('DELETE FROM findings WHERE inspection_id = ?').run(inspection.id); db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspection.id);
+  resetInspectionAssessment(inspection.id);
   logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'EVIDENCE_UPLOADED', metadata: { imageType, count: req.files.length } });
   res.status(201).json({ inspection: inspectionResponse(fetchInspection(inspection.id)) });
+}
+
+async function qualityCheckImage(req, res) {
+  const inspection = fetchInspection(req.params.id); assertOfficerOwner(inspection, req.user);
+  const image = db.prepare('SELECT * FROM inspection_images WHERE id = ? AND inspection_id = ?').get(req.params.imageId, inspection.id);
+  if (!image) throw new AppError(404, 'Inspection image was not found.');
+  const quality = await evaluateImageQuality(image);
+  db.prepare('UPDATE inspection_images SET quality_state = ?, quality_reason = ?, preprocessing_json = ? WHERE id = ?').run(quality.qualityState, quality.reason, JSON.stringify(quality.metrics), image.id);
+  res.json({ imageId: image.id, qualityState: quality.qualityState, reason: quality.reason, metrics: quality.metrics, qualityOverride: Boolean(image.quality_override) });
+}
+
+function useImageQualityAnyway(req, res) {
+  const inspection = fetchInspection(req.params.id); assertOfficerOwner(inspection, req.user);
+  const image = db.prepare('SELECT * FROM inspection_images WHERE id = ? AND inspection_id = ?').get(req.params.imageId, inspection.id);
+  if (!image) throw new AppError(404, 'Inspection image was not found.');
+  db.prepare('UPDATE inspection_images SET quality_override = 1, quality_override_by = ?, quality_override_at = CURRENT_TIMESTAMP WHERE id = ?').run(req.user.sub, image.id);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'IMAGE_QUALITY_OVERRIDE_ACCEPTED', metadata: { imageId: image.id, imageType: image.image_type, qualityState: image.quality_state, reason: image.quality_reason } });
+  res.json({ imageId: image.id, qualityOverride: true });
+}
+
+function deleteInspectionImage(req, res) {
+  const inspection = fetchInspection(req.params.id); assertOfficerOwner(inspection, req.user);
+  const image = db.prepare('SELECT * FROM inspection_images WHERE id = ? AND inspection_id = ?').get(req.params.imageId, inspection.id);
+  if (!image) throw new AppError(404, 'Inspection image was not found.');
+  resetInspectionAssessment(inspection.id);
+  db.prepare('DELETE FROM inspection_images WHERE id = ?').run(image.id);
+  removeStoredFiles([image.storage_path, image.ocr_storage_path]);
+  logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'EVIDENCE_RETAKE_REQUESTED', metadata: { imageId: image.id, imageType: image.image_type } });
+  res.json({ deleted: true, imageId: image.id, inspection: inspectionResponse(fetchInspection(inspection.id)) });
 }
 
 async function analyzeInspection(req, res) {
@@ -202,13 +240,15 @@ async function analyzeInspection(req, res) {
     db.prepare('DELETE FROM findings WHERE inspection_id = ?').run(inspection.id);
     db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspection.id);
     const updateImage = db.prepare('UPDATE inspection_images SET quality_state = ?, quality_reason = ?, ocr_text = ?, normalized_ocr_text = ?, ocr_confidence = ?, ocr_status = ?, ocr_error = ?, ocr_storage_path = ?, preprocessing_json = ? WHERE id = ?');
-    for (const result of ocr.images) updateImage.run(result.state === 'COMPLETED' ? 'ACCEPTABLE' : 'REVIEW_REQUIRED', result.reason, result.text, result.normalizedText, result.confidence, result.state, result.state === 'COMPLETED' ? null : result.reason, result.ocrStoragePath, JSON.stringify(result.quality), result.imageId);
+    for (const result of ocr.images) updateImage.run(result.qualityState || QUALITY_STATE.REVIEW_REQUIRED, result.reason, result.text, result.normalizedText, result.confidence, result.state, result.state === 'COMPLETED' ? null : result.reason, result.ocrStoragePath, JSON.stringify(result.quality), result.imageId);
     const insert = db.prepare('INSERT INTO declarations (id, inspection_id, field_name, value, detection_state, confidence, source_image_id, bounding_box_json, extraction_method, extraction_state, ocr_evidence, extraction_source, visual_evidence_description, ocr_candidate_json, vision_candidate_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     for (const declaration of extraction.declarations) insert.run(crypto.randomUUID(), inspection.id, declaration.field, declaration.value, declaration.value ? 'DETECTED' : 'NOT_DETECTED', declaration.confidence, declaration.sourceImageId, declaration.boundingBox ? JSON.stringify(declaration.boundingBox) : null, ['OCR_DETECTED', 'NOT_DETECTED'].includes(declaration.extractionSource) ? 'OCR_DETERMINISTIC' : 'OCR_VISION_HYBRID', declaration.extractionState, declaration.ocrEvidence, declaration.extractionSource, declaration.visualEvidenceDescription, declaration.ocrCandidate ? JSON.stringify(declaration.ocrCandidate) : null, declaration.visionCandidate ? JSON.stringify(declaration.visionCandidate) : null);
     db.prepare('UPDATE inspections SET ai_extraction_json = ?, ai_diagnostics_json = ?, vision_extraction_json = ?, vision_diagnostics_json = ? WHERE id = ?').run(JSON.stringify(visionExtraction.candidates), JSON.stringify(visionExtraction.diagnostics), JSON.stringify(visionExtraction.candidates), JSON.stringify(visionExtraction.diagnostics), inspection.id);
   });
   save();
   const savedDeclarations = db.prepare('SELECT * FROM declarations WHERE inspection_id = ?').all(inspection.id).map(item => ({ ...item, field: item.field_name, sourceImageId: item.source_image_id }));
+  const productCondition = evaluateProductCondition({ declarations: savedDeclarations, inspectionDate: inspection.created_at });
+  db.prepare('UPDATE inspections SET product_condition = ?, product_condition_reason = ?, product_condition_evaluated_at = CURRENT_TIMESTAMP WHERE id = ?').run(productCondition.productCondition, productCondition.reason, inspection.id);
   const completedOcr = ocr.images.filter(item => item.state === 'COMPLETED');
   const assessment = await ruleEngine.assessDeclarations({ inspectionId: inspection.id, declarations: savedDeclarations, ocrConfidence: completedOcr.length ? Math.min(...completedOcr.map(item => item.confidence || 0)) : 0 });
   const saveFindings = db.transaction(() => {
@@ -219,7 +259,7 @@ async function analyzeInspection(req, res) {
   saveFindings();
   db.prepare("UPDATE inspections SET state = 'PENDING_REVIEW', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
   logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_COMPLETED', metadata: { actorRole: req.user.role, ocrState: ocr.state, visionFallback: Boolean(visionExtraction.diagnostics?.fallbackUsed) } });
-  res.status(202).json({ inspection: inspectionResponse(fetchInspection(inspection.id)), analysis: { state: ocr.state, message: 'Preliminary analysis completed and stored.', ocr, ocrOnlyExtraction: deterministicExtraction, extraction, aiExtraction: visionExtraction.diagnostics, visionExtraction: visionExtraction.diagnostics, assessment } });
+  res.status(202).json({ inspection: inspectionResponse(fetchInspection(inspection.id)), analysis: { state: ocr.state, message: 'Preliminary analysis completed and stored.', ocr, ocrOnlyExtraction: deterministicExtraction, extraction, aiExtraction: visionExtraction.diagnostics, visionExtraction: visionExtraction.diagnostics, assessment, productCondition } });
   } catch (error) {
     db.prepare('UPDATE inspections SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(recoveryState, inspection.id);
     throw error;
@@ -321,4 +361,4 @@ function getReportFile(req, res) {
   res.type('application/pdf'); res.set('Content-Disposition', `inline; filename="${report.report_number}.pdf"`); return res.sendFile(filePath);
 }
 
-module.exports = { createInspection, listInspections, getInspection, deleteInspection, addImages, getImageFile, analyzeInspection, reviewFinding, setAdminDecision, requestReport, listReports, deleteReport, getReportFile };
+module.exports = { createInspection, listInspections, getInspection, deleteInspection, addImages, qualityCheckImage, useImageQualityAnyway, deleteInspectionImage, getImageFile, analyzeInspection, reviewFinding, setAdminDecision, requestReport, listReports, deleteReport, getReportFile };

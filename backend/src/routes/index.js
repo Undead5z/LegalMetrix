@@ -47,6 +47,9 @@ router.get('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandl
 router.delete('/inspections/:id', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.deleteInspection));
 router.get('/inspections/:id/images/:imageId/file', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.getImageFile));
 router.post('/inspections/:id/images', ...authenticated, requireFieldOfficer, upload.array('images', 6), asyncHandler(inspection.addImages));
+router.post('/inspections/:id/images/:imageId/quality-check', ...authenticated, requireFieldOfficer, asyncHandler(inspection.qualityCheckImage));
+router.patch('/inspections/:id/images/:imageId/quality-override', ...authenticated, requireFieldOfficer, asyncHandler(inspection.useImageQualityAnyway));
+router.delete('/inspections/:id/images/:imageId', ...authenticated, requireFieldOfficer, asyncHandler(inspection.deleteInspectionImage));
 router.post('/inspections/:id/analyze', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.analyzeInspection));
 router.patch('/findings/:id/review', ...authenticated, requireFieldOrAdmin, asyncHandler(inspection.reviewFinding));
 router.patch('/inspections/:id/admin-decision', ...authenticated, requireAdmin, asyncHandler(inspection.setAdminDecision));

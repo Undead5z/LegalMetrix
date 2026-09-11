@@ -15,6 +15,7 @@ module.exports = {
   databasePath: path.resolve(rootDir, process.env.DATABASE_PATH || './data/legalmetrix.db'),
   uploadDir: path.resolve(rootDir, process.env.UPLOAD_DIR || './uploads'),
   reportDir: path.resolve(rootDir, process.env.REPORT_DIR || path.join(process.env.UPLOAD_DIR || './uploads', 'reports')),
+  productConditionNearExpiryDays: Number(process.env.PRODUCT_CONDITION_NEAR_EXPIRY_DAYS || 30),
   visionAiProvider: process.env.VISION_AI_PROVIDER || 'openrouter',
   // Legacy AI_EXTRACTION_* names are accepted for existing local installations.
   aiExtractionApiKey: process.env.VISION_AI_API_KEY || process.env.AI_EXTRACTION_API_KEY || '',

@@ -1,6 +1,8 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const sharp = require('sharp');
 
 const testDb = path.join(__dirname, '../data/round2-workflow-test.db');
 for (const suffix of ['', '-wal', '-shm', '.pre-round2-backup']) { try { fs.rmSync(`${testDb}${suffix}`); } catch {} }
@@ -114,6 +116,29 @@ inspection.reviewFinding({ params: { id: findingFive }, user: { sub: standardAdm
 assert.equal(db.prepare('SELECT reviewed_by FROM findings WHERE id = ?').get(findingFive).reviewed_by, standardAdmin.id);
 await inspection.setAdminDecision({ params: { id: inspectionFive }, user: { sub: standardAdmin.id, role: standardAdmin.role }, body: { decision: 'VERIFIED' } }, response());
 assert.equal(db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(inspectionFive).admin_decision, 'VERIFIED');
+// Image quality is an evidence workflow only: retake/override never creates legal findings.
+const qualityProduct = '10000000-0000-4000-8000-000000000007'; const qualityInspection = '20000000-0000-4000-8000-000000000007'; const qualityImage = '30000000-0000-4000-8000-000000000007';
+db.prepare('INSERT INTO products (id, product_name) VALUES (?, ?)').run(qualityProduct, 'Quality test product');
+db.prepare("INSERT INTO inspections (id, inspection_number, product_id, officer_id, state) VALUES (?, ?, ?, ?, 'DRAFT')").run(qualityInspection, 'LM-TEST-QUALITY', qualityProduct, officer.id);
+const qualityFileName = `quality-test-${crypto.randomUUID()}.jpg`; const qualityFilePath = path.join(__dirname, '../uploads', qualityFileName);
+await sharp(Buffer.alloc(50 * 50 * 3, 128), { raw: { width: 50, height: 50, channels: 3 } }).jpeg().toFile(qualityFilePath);
+db.prepare("INSERT INTO inspection_images (id, inspection_id, image_type, original_filename, storage_path, mime_type, size_bytes) VALUES (?, ?, 'FRONT', ?, ?, 'image/jpeg', ?)").run(qualityImage, qualityInspection, qualityFileName, `uploads/${qualityFileName}`, fs.statSync(qualityFilePath).size);
+const qualityResponse = response(); await inspection.qualityCheckImage({ params: { id: qualityInspection, imageId: qualityImage }, user: { sub: officer.id, role: 'FIELD_OFFICER' } }, qualityResponse);
+assert.equal(qualityResponse.body.qualityState, 'REVIEW_REQUIRED');
+inspection.useImageQualityAnyway({ params: { id: qualityInspection, imageId: qualityImage }, user: { sub: officer.id, role: 'FIELD_OFFICER' } }, response());
+assert.equal(db.prepare('SELECT quality_override FROM inspection_images WHERE id = ?').get(qualityImage).quality_override, 1);
+assert.equal(db.prepare('SELECT COUNT(*) AS count FROM findings WHERE inspection_id = ?').get(qualityInspection).count, 0);
+inspection.deleteInspectionImage({ params: { id: qualityInspection, imageId: qualityImage }, user: { sub: officer.id, role: 'FIELD_OFFICER' } }, response());
+assert.equal(db.prepare('SELECT COUNT(*) AS count FROM inspection_images WHERE id = ?').get(qualityImage).count, 0);
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(qualityInspection).state, 'DRAFT');
+assert.ok(!fs.existsSync(qualityFilePath));
+
+// Product condition is independent from label-compliance outcomes and filterable on the inspection list.
+db.prepare("UPDATE inspections SET product_condition = 'EXPIRED', product_condition_reason = 'Best-before date has passed.' WHERE id = ?").run(inspectionId);
+assert.equal(db.prepare('SELECT admin_decision FROM inspections WHERE id = ?').get(inspectionId).admin_decision, 'VERIFIED');
+const expiredResponse = response(); inspection.listInspections({ query: { productCondition: 'EXPIRED' }, user: { sub: admin.id, role: 'MASTER_ADMIN' } }, expiredResponse);
+assert.deepEqual(expiredResponse.body.inspections.map(item => item.id), [inspectionId]);
+
 console.log('Workflow ownership and manual override tests passed.');
 db.close();
 }
