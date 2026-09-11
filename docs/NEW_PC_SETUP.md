@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Install Git and **Node.js 22 LTS**. The repository currently locks `better-sqlite3` 11.x, which has no Windows prebuilt binary for Node 24 (ABI 137). Node 22 LTS is the compatible runtime; do not use Node 24 for the backend unless the native dependency is intentionally upgraded in a future change.
+Install Git and **Node.js 22 LTS**. LegalMetrix uses `better-sqlite3` 13.x, which requires Node 22 or newer. Node 22 LTS is the tested local and Railway runtime.
 
 ```powershell
 winget install --id Git.Git -e
@@ -109,7 +109,7 @@ New-NetFirewallRule -DisplayName 'LegalMetrix backend (Private)' -Direction Inbo
 
 ## Troubleshooting
 
-- **`Could not locate the bindings file` / `node-v137`**: Node 24 is active. Install Node 22 LTS as above, then clean only the backend installation:
+- **`Could not locate the bindings file`**: ensure Node 22+ is active, then clean only the backend installation:
 
   ```powershell
   cd backend
