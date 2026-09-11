@@ -64,16 +64,24 @@ const findingFieldLabels = {
   brand_name: 'Brand name',
   product_name: 'Product name',
   net_quantity: 'Net quantity',
-  mrp: 'Maximum Retail Price',
-  consumer_care_phone: 'Consumer-care phone',
-  consumer_care_email: 'Consumer-care email',
+  mrp: 'MRP',
+  consumer_care_phone: 'Consumer phone',
+  consumer_care_email: 'Consumer email',
   manufacturer: 'Manufacturer',
   manufacturer_address: 'Manufacturer address',
   importer: 'Importer',
   packer: 'Packer'
 };
+const findingRuleLabels = {
+  'LM-MVP-PRODUCT-NAME': 'Product name',
+  'LM-MVP-BUSINESS-INFO': 'Business info',
+  'LM-MVP-NET-QUANTITY': 'Net quantity',
+  'LM-MVP-MRP': 'MRP',
+  'LM-MVP-CONSUMER-CARE': 'Consumer care',
+  'LM-MVP-DATE': 'Date'
+};
 function formatFindingLabels(findings) {
-  const labels = [...new Set(findings.map(finding => findingFieldLabels[finding.field_name] || finding.rule_name || finding.rule_code || finding.declaration_field || finding.status).filter(Boolean))];
+  const labels = [...new Set(findings.map(finding => findingFieldLabels[finding.field_name] || findingRuleLabels[finding.rule_code] || finding.declaration_field || finding.status).filter(Boolean))];
   return { count: labels.length, summary: labels.join(' | '), labels };
 }
 function selectedAdminFindingSummary(inspection) {

@@ -9,11 +9,17 @@ import { EmptyState } from '../components/EmptyState';
 const filterKeys = ['search', 'state', 'issue', 'from', 'to'];
 const statusFilterValues = Object.values(INSPECTION_STATUS);
 function issueSummary(inspection) {
-  if (inspection.potential_issues_count) {
-    const label = String(inspection.potential_issue_summary || 'Issue').split(' · ')[0].replace(/\s+declaration$/i, '');
-    return `${inspection.potential_issues_count} potential issue${inspection.potential_issues_count === 1 ? '' : 's'}: ${label}`;
+  const status = inspectionDisplayStatus(inspection);
+  if (status === INSPECTION_STATUS.VERIFIED) return 'No potential issues';
+  if (isPotentialIssueStatus(status)) {
+    const labels = String(inspection.admin_potential_issue_summary || '').split(' | ').filter(Boolean);
+    return labels.length ? `${labels.length} potential issue${labels.length === 1 ? '' : 's'}: ${labels.join(' and ')}` : 'Potential outcome ? no finding selected';
   }
-  return isPotentialIssueStatus(inspectionDisplayStatus(inspection)) ? 'Administrative potential issue decision' : 'No potential issues';
+  if (inspection.potential_issues_count) {
+    const label = String(inspection.potential_issue_summary || 'Issue').split(' ? ')[0].replace(/\s+declaration$/i, '');
+    return `${inspection.potential_issues_count} preliminary potential issue${inspection.potential_issues_count === 1 ? '' : 's'}: ${label}`;
+  }
+  return 'No potential issues';
 }
 
 export function InspectionsPage() {
