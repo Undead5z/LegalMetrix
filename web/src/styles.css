@@ -149,3 +149,26 @@
   .inspection-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .inspection-row { min-width: 760px; }
 }
+
+/* Align inspection outcomes as true columns on desktop. */
+.inspection-row > :nth-child(4), .inspection-row > :nth-child(5), .inspection-row.table-head > :nth-child(4), .inspection-row.table-head > :nth-child(5) { justify-self: center; width: 100%; text-align: center; }
+.recent-inspections-table .row > :nth-child(3), .recent-inspections-table .table-head > :nth-child(3) { justify-self: center; width: 100%; text-align: center; }
+
+/* Mobile web list: stack record data into the viewport rather than clipping desktop-width rows. */
+@media (max-width: 760px) {
+  .inspection-table { overflow: visible; }
+  .inspection-table .inspection-row.table-head, .recent-inspections-table .row.table-head { display: none; }
+  .inspection-table .inspection-row:not(.table-head) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; min-width: 0 !important; gap: 8px 14px; padding: 16px 0; }
+  .inspection-table .inspection-row > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .inspection-table .inspection-row > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .inspection-table .inspection-row > :nth-child(3) { grid-column: 2; grid-row: 2; }
+  .inspection-table .inspection-row > :nth-child(4) { grid-column: 1; grid-row: 2; justify-self: start; text-align: left; }
+  .inspection-table .inspection-row > :nth-child(5) { grid-column: 1 / -1; grid-row: 3; justify-self: stretch; text-align: left; }
+  .inspection-table .inspection-row .status { justify-self: start; width: fit-content; max-width: 100%; }
+  .recent-inspections-table .row:not(.table-head) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-width: 0; gap: 8px 14px; padding: 14px 0; }
+  .recent-inspections-table .row > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .recent-inspections-table .row > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .recent-inspections-table .row > :nth-child(3) { grid-column: 1; grid-row: 2; justify-self: start; text-align: left; }
+  .recent-inspections-table .row > :nth-child(4) { grid-column: 2; grid-row: 2; }
+  .recent-inspections-table .row .status { justify-self: start; width: fit-content; }
+}
