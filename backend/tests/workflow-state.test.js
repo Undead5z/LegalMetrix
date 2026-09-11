@@ -62,6 +62,11 @@ assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspec
 assert.equal(db.prepare('SELECT officer_decision FROM findings WHERE id = ?').get(issueFinding).officer_decision, 'CONFIRMED');
 assert.deepEqual(db.prepare("SELECT value, detection_state, confidence, extraction_state, ocr_evidence FROM declarations WHERE inspection_id = ? AND field_name = 'mrp'").get(inspectionTwo), { value: null, detection_state: 'NOT_DETECTED', confidence: .42, extraction_state: 'NEEDS_REVIEW', ocr_evidence: 'Unreadable OCR candidate' });
 assert.equal(db.prepare('SELECT admin_decision_comment FROM inspections WHERE id = ?').get(inspectionTwo).admin_decision_comment, 'MRP confirmed by manual evidence review.');
+const verifiedPotentialFilter = response(); inspection.listInspections({ query: { issue: 'potential' }, user: { sub: admin.id, role: 'MASTER_ADMIN' } }, verifiedPotentialFilter);
+assert.ok(!verifiedPotentialFilter.body.inspections.some(item => item.id === inspectionTwo));
+// A final verified outcome can be corrected to a supported potential outcome without restarting the workflow.
+await inspection.setAdminDecision({ params: { id: inspectionTwo }, user: { sub: admin.id, role: 'MASTER_ADMIN' }, body: { decision: 'POTENTIAL_NON_COMPLIANCE_CONFIRMED', findingIds: [issueFinding], comment: 'Administrative outcome corrected after evidence review.' } }, response());
+assert.equal(db.prepare('SELECT state FROM inspections WHERE id = ?').get(inspectionTwo).state, 'POTENTIAL_NON_COMPLIANCE_CONFIRMED');
 const overrideAudit = JSON.parse(db.prepare("SELECT metadata_json FROM audit_logs WHERE inspection_id = ? AND action = 'ADMIN_DECISION_RECORDED' ORDER BY created_at DESC LIMIT 1").get(inspectionTwo).metadata_json);
 assert.equal(overrideAudit.manualOverride, true);
 assert.equal(overrideAudit.finalDecision, 'VERIFIED');

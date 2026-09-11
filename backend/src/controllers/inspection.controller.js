@@ -94,7 +94,7 @@ function listInspections(req, res) {
   if (!isAdmin(req.user)) { clauses.push('i.officer_id = ?'); values.push(req.user.sub); }
   if (state === INSPECTION_STATUS.PENDING_REVIEW) clauses.push("i.state = 'PENDING_REVIEW' AND i.admin_decision IS NULL");
   else if (state) { clauses.push('i.state = ?'); values.push(state); }
-  if (issue === 'potential') clauses.push(`(i.admin_decision IN (${potentialDecisionSql}) OR EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE'))`);
+  if (issue === 'potential') clauses.push(`(i.admin_decision IN (${potentialDecisionSql}) OR (i.admin_decision IS NULL AND EXISTS (SELECT 1 FROM findings issue_finding WHERE issue_finding.inspection_id = i.id AND issue_finding.status = 'POTENTIAL_NON_COMPLIANCE')))`);
   if (search) { clauses.push('(p.product_name LIKE ? OR i.inspection_number LIKE ? OR u.full_name LIKE ?)'); values.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
@@ -217,7 +217,8 @@ async function setAdminDecision(req, res) {
   const inspection = fetchInspection(req.params.id);
   assertAccess(inspection, req.user);
   if (!isAdmin(req.user)) throw new AppError(403, 'Only an authorized Administrator can record a final administrative outcome.');
-  if (!['OFFICER_REVIEW_COMPLETED', 'ADMIN_REVIEW_PENDING'].includes(inspection.state)) throw new AppError(409, 'Complete Field Officer review before recording an administrative outcome.');
+  const adminDecisionReviewable = ['OFFICER_REVIEW_COMPLETED', 'ADMIN_REVIEW_PENDING', ...ADMIN_DECISIONS].includes(inspection.state);
+  if (!adminDecisionReviewable) throw new AppError(409, 'Complete Field Officer review before recording an administrative outcome.');
   const { decision } = parsed.data;
   const findingIds = [...new Set(parsed.data.findingIds || [])];
   if (decision !== 'VERIFIED') {
