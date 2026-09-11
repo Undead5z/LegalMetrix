@@ -56,7 +56,9 @@ export function InspectionDetailPage() {
   const aiDebug = (() => { try { return JSON.parse(inspection.ai_diagnostics_json || '{}'); } catch { return {}; } })();
   const choosingFinding = [INSPECTION_STATUS.POTENTIAL_NON_COMPLIANCE_CONFIRMED, INSPECTION_STATUS.ESCALATED_FOR_ENFORCEMENT_REVIEW].includes(pendingDecision);
   const presentationStatus = inspectionDisplayStatus(inspection);
-  const potentialIssueDetail = inspection.potential_issues_count ? `${inspection.potential_issues_count} preliminary potential issue${inspection.potential_issues_count === 1 ? '' : 's'} identified.` : isPotentialIssueStatus(presentationStatus) ? 'Administrative potential issue decision recorded.' : 'No potential issues identified.';
+  const selectedPotentialLabels = inspection.admin_potential_issue_summary ? inspection.admin_potential_issue_summary.split(' | ').filter(Boolean) : [];
+  const selectedPotentialDetail = selectedPotentialLabels.length ? `${selectedPotentialLabels.length} potential issue${selectedPotentialLabels.length === 1 ? '' : 's'}: ${selectedPotentialLabels.join(' and ')}` : 'Potential outcome recorded ? no supporting finding selected.';
+  const potentialIssueDetail = presentationStatus === INSPECTION_STATUS.VERIFIED ? 'No potential issues identified.' : isPotentialIssueStatus(presentationStatus) ? selectedPotentialDetail : inspection.potential_issues_count ? `${inspection.potential_issues_count} preliminary potential issue${inspection.potential_issues_count === 1 ? '' : 's'} identified.` : 'No potential issues identified.';
   const verificationBlocked = inspection.findings.some(finding => !finding.officer_decision || (['POTENTIAL_NON_COMPLIANCE', 'REVIEW_REQUIRED'].includes(finding.status) && finding.officer_decision !== 'REJECTED')) || inspection.declarations.some(declaration => declaration.extraction_state === 'NEEDS_REVIEW');
   const verificationBlockMessage = 'Verification is unavailable while findings or OCR/Vision extraction conflicts remain unresolved.';
 

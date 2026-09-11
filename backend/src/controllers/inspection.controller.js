@@ -58,15 +58,48 @@ function decisionFindingIds(inspection) {
   } catch { /* Legacy or malformed data falls back to the original single selection. */ }
   return inspection.admin_decision_finding_id ? [inspection.admin_decision_finding_id] : [];
 }
+const findingFieldLabels = {
+  manufacturing_or_packing_date: 'Manufacturing date',
+  best_before: 'Expiry date',
+  brand_name: 'Brand name',
+  product_name: 'Product name',
+  net_quantity: 'Net quantity',
+  mrp: 'Maximum Retail Price',
+  consumer_care_phone: 'Consumer-care phone',
+  consumer_care_email: 'Consumer-care email',
+  manufacturer: 'Manufacturer',
+  manufacturer_address: 'Manufacturer address',
+  importer: 'Importer',
+  packer: 'Packer'
+};
+function formatFindingLabels(findings) {
+  const labels = [...new Set(findings.map(finding => findingFieldLabels[finding.field_name] || finding.rule_name || finding.rule_code || finding.declaration_field || finding.status).filter(Boolean))];
+  return { count: labels.length, summary: labels.join(' | '), labels };
+}
+function selectedAdminFindingSummary(inspection) {
+  if (!POTENTIAL_OUTCOME_DECISIONS.includes(inspection.admin_decision)) return { count: 0, summary: '', labels: [] };
+  const ids = decisionFindingIds(inspection);
+  if (!ids.length) return { count: 0, summary: '', labels: [] };
+  const placeholders = ids.map(() => '?').join(', ');
+  const rows = db.prepare(`SELECT f.id, f.status, d.field_name, r.name AS rule_name, r.rule_code, r.declaration_field FROM findings f LEFT JOIN declarations d ON d.id = f.declaration_id LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = ? AND f.id IN (${placeholders})`).all(inspection.id, ...ids);
+  const byId = new Map(rows.map(row => [row.id, row]));
+  return formatFindingLabels(ids.map(id => byId.get(id)).filter(Boolean));
+}
+function withAdminPotentialIssueSummary(inspection) {
+  const summary = selectedAdminFindingSummary(inspection);
+  return { ...inspection, admin_potential_issue_count: summary.count, admin_potential_issue_summary: summary.summary, admin_potential_issue_labels: summary.labels };
+}
+
 function inspectionResponse(inspection) {
   const images = db.prepare('SELECT * FROM inspection_images WHERE inspection_id = ? ORDER BY created_at').all(inspection.id);
   const declarations = db.prepare('SELECT * FROM declarations WHERE inspection_id = ? ORDER BY created_at').all(inspection.id);
-  const findings = db.prepare(`SELECT f.*, r.rule_code, r.legal_reference FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = ? ORDER BY f.created_at`).all(inspection.id);
+  const findings = db.prepare(`SELECT f.*, r.rule_code, r.legal_reference, r.name AS rule_name, r.declaration_field FROM findings f LEFT JOIN rules r ON r.id = f.rule_id WHERE f.inspection_id = ? ORDER BY f.created_at`).all(inspection.id);
   const reports = db.prepare('SELECT * FROM reports WHERE inspection_id = ? ORDER BY created_at DESC').all(inspection.id);
   const ids = decisionFindingIds(inspection);
   const byId = new Map(findings.map(finding => [finding.id, finding]));
   const adminDecisionFindings = ids.map(id => byId.get(id)).filter(Boolean);
-  return { ...inspection, images, declarations, findings, reports, adminDecisionFindings };
+  const adminPotentialIssue = formatFindingLabels(adminDecisionFindings);
+  return { ...inspection, images, declarations, findings, reports, adminDecisionFindings, admin_potential_issue_count: POTENTIAL_OUTCOME_DECISIONS.includes(inspection.admin_decision) ? adminPotentialIssue.count : 0, admin_potential_issue_summary: POTENTIAL_OUTCOME_DECISIONS.includes(inspection.admin_decision) ? adminPotentialIssue.summary : '', admin_potential_issue_labels: POTENTIAL_OUTCOME_DECISIONS.includes(inspection.admin_decision) ? adminPotentialIssue.labels : [] };
 }
 
 function createInspection(req, res) {
@@ -99,7 +132,7 @@ function listInspections(req, res) {
   if (from) { clauses.push('date(i.created_at) >= date(?)'); values.push(from); }
   if (to) { clauses.push('date(i.created_at) <= date(?)'); values.push(to); }
   const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
-  const inspections = db.prepare(`${inspectionQuery}${where} ORDER BY i.created_at DESC`).all(...values);
+  const inspections = db.prepare(`${inspectionQuery}${where} ORDER BY i.created_at DESC`).all(...values).map(withAdminPotentialIssueSummary);
   res.json({ inspections });
 }
 
