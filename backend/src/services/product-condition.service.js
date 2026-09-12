@@ -1,4 +1,5 @@
 const env = require('../config/env');
+const { isDateReferencePointer } = require('./date-reference.service');
 
 const PRODUCT_CONDITION = Object.freeze({
   VALID: 'VALID',
@@ -9,6 +10,9 @@ const PRODUCT_CONDITION = Object.freeze({
 
 const reliable = declaration => Boolean(
   declaration?.value &&
+  !declaration.date_reference_pointer &&
+  !declaration.dateReferencePointer &&
+  !isDateReferencePointer(declaration.value) &&
   Number(declaration.confidence || 0) >= 0.7 &&
   declaration.extraction_state === 'DETECTED' &&
   !['LOW_CONFIDENCE', 'NEEDS_REVIEW'].includes(declaration.extraction_state)

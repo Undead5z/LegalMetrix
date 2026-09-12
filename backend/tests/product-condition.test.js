@@ -17,6 +17,7 @@ assert.equal(evaluate([declaration('best_before', '12 months')]).productConditio
 const derived = evaluate([declaration('manufacturing_or_packing_date', '01/01/2026'), declaration('best_before', '12 months')]);
 assert.equal(derived.productCondition, PRODUCT_CONDITION.VALID);
 assert.equal(evaluate([declaration('best_before', '01/09/2026', 0.5)]).productCondition, PRODUCT_CONDITION.UNKNOWN);
+assert.equal(evaluate([{ ...declaration('best_before', 'See top'), date_reference_pointer: 'See top' }]).productCondition, PRODUCT_CONDITION.UNKNOWN);
 // Product condition is information only; this service never creates or mutates compliance findings.
 assert.deepEqual(Object.keys(expired).sort(), ['expiryDate', 'productCondition', 'reason'].sort());
 console.log('Product-condition tests passed.');

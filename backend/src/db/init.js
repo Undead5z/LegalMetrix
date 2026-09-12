@@ -115,6 +115,7 @@ ensureColumn('inspections', 'product_condition_evaluated_at', 'TEXT');
 ensureColumn('declarations', 'visual_evidence_description', 'TEXT');
 ensureColumn('declarations', 'ocr_candidate_json', 'TEXT');
 ensureColumn('declarations', 'vision_candidate_json', 'TEXT');
+ensureColumn('declarations', 'date_reference_pointer', 'TEXT');
 ensureColumn('users', 'account_status', "TEXT NOT NULL DEFAULT 'PENDING_APPROVAL'");
 ensureColumn('users', 'employee_id', 'TEXT');
 ensureColumn('users', 'phone', 'TEXT');

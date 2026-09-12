@@ -15,6 +15,7 @@ const { ADMIN_DECISIONS, INSPECTION_STATUS, POTENTIAL_OUTCOME_DECISIONS } = requ
 const { resolveStoredPath, toStoredPath, removeStoredFiles } = require('../services/storage.service');
 const { evaluateProductCondition } = require('../services/product-condition.service');
 const { evaluateImageQuality, QUALITY_STATE } = require('../services/ocr.service');
+const { logMemory } = require('../services/memory-diagnostics.service');
 
 const potentialDecisionSql = POTENTIAL_OUTCOME_DECISIONS.map(status => `'${status}'`).join(', ');
 
@@ -229,10 +230,14 @@ async function analyzeInspection(req, res) {
   try {
   db.prepare("UPDATE inspections SET state = 'PROCESSING', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
   logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_STARTED', metadata: { actorRole: req.user.role } });
-  const ocr = await ocrService.readImages(images);
+  logMemory('analysis start');
+  const ocr = await ocrService.readImages(images, { onProgress: stage => logMemory(stage) });
+  logMemory('after OCR');
   const deterministicExtraction = await extractionService.extractDeclarations(ocr);
   const visionImages = images.map(image => ({ ...image, ocr_hint: ocr.images.find(result => result.imageId === image.id)?.normalizedText || '' }));
+  logMemory('before Vision');
   const visionExtraction = await visionExtractionService.extractVisually({ inspectionId: inspection.id, images: visionImages });
+  logMemory('after Vision');
   const extraction = { ...deterministicExtraction, declarations: evidenceMerger.mergeEvidence(deterministicExtraction.declarations, visionExtraction.candidates, images) };
   const save = db.transaction(() => {
     // New analysis replaces prior findings, so any administrator decision based on them is cleared.
@@ -241,8 +246,8 @@ async function analyzeInspection(req, res) {
     db.prepare('DELETE FROM declarations WHERE inspection_id = ?').run(inspection.id);
     const updateImage = db.prepare('UPDATE inspection_images SET quality_state = ?, quality_reason = ?, ocr_text = ?, normalized_ocr_text = ?, ocr_confidence = ?, ocr_status = ?, ocr_error = ?, ocr_storage_path = ?, preprocessing_json = ? WHERE id = ?');
     for (const result of ocr.images) updateImage.run(result.qualityState || QUALITY_STATE.REVIEW_REQUIRED, result.reason, result.text, result.normalizedText, result.confidence, result.state, result.state === 'COMPLETED' ? null : result.reason, result.ocrStoragePath, JSON.stringify(result.quality), result.imageId);
-    const insert = db.prepare('INSERT INTO declarations (id, inspection_id, field_name, value, detection_state, confidence, source_image_id, bounding_box_json, extraction_method, extraction_state, ocr_evidence, extraction_source, visual_evidence_description, ocr_candidate_json, vision_candidate_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    for (const declaration of extraction.declarations) insert.run(crypto.randomUUID(), inspection.id, declaration.field, declaration.value, declaration.value ? 'DETECTED' : 'NOT_DETECTED', declaration.confidence, declaration.sourceImageId, declaration.boundingBox ? JSON.stringify(declaration.boundingBox) : null, ['OCR_DETECTED', 'NOT_DETECTED'].includes(declaration.extractionSource) ? 'OCR_DETERMINISTIC' : 'OCR_VISION_HYBRID', declaration.extractionState, declaration.ocrEvidence, declaration.extractionSource, declaration.visualEvidenceDescription, declaration.ocrCandidate ? JSON.stringify(declaration.ocrCandidate) : null, declaration.visionCandidate ? JSON.stringify(declaration.visionCandidate) : null);
+    const insert = db.prepare('INSERT INTO declarations (id, inspection_id, field_name, value, detection_state, confidence, source_image_id, bounding_box_json, extraction_method, extraction_state, ocr_evidence, extraction_source, visual_evidence_description, ocr_candidate_json, vision_candidate_json, date_reference_pointer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const declaration of extraction.declarations) insert.run(crypto.randomUUID(), inspection.id, declaration.field, declaration.value, declaration.value ? 'DETECTED' : 'NOT_DETECTED', declaration.confidence, declaration.sourceImageId, declaration.boundingBox ? JSON.stringify(declaration.boundingBox) : null, ['OCR_DETECTED', 'NOT_DETECTED'].includes(declaration.extractionSource) ? 'OCR_DETERMINISTIC' : 'OCR_VISION_HYBRID', declaration.extractionState, declaration.ocrEvidence, declaration.extractionSource, declaration.visualEvidenceDescription, declaration.ocrCandidate ? JSON.stringify(declaration.ocrCandidate) : null, declaration.visionCandidate ? JSON.stringify(declaration.visionCandidate) : null, declaration.dateReferencePointer || null);
     db.prepare('UPDATE inspections SET ai_extraction_json = ?, ai_diagnostics_json = ?, vision_extraction_json = ?, vision_diagnostics_json = ? WHERE id = ?').run(JSON.stringify(visionExtraction.candidates), JSON.stringify(visionExtraction.diagnostics), JSON.stringify(visionExtraction.candidates), JSON.stringify(visionExtraction.diagnostics), inspection.id);
   });
   save();
@@ -257,8 +262,10 @@ async function analyzeInspection(req, res) {
     assessment.findings.forEach(finding => insert.run(crypto.randomUUID(), inspection.id, finding.ruleId, finding.evidence[0]?.declarationId || null, finding.status, finding.explanation, JSON.stringify({ field: finding.field, observedValue: finding.observedValue, evidence: finding.evidence, legalReference: finding.legalReference, ruleVersion: finding.ruleVersion }), finding.confidence));
   });
   saveFindings();
+  logMemory('after declarations and rule engine');
   db.prepare("UPDATE inspections SET state = 'PENDING_REVIEW', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(inspection.id);
   logAuditEvent({ actorUserId: req.user.sub, inspectionId: inspection.id, action: 'ANALYSIS_COMPLETED', metadata: { actorRole: req.user.role, ocrState: ocr.state, visionFallback: Boolean(visionExtraction.diagnostics?.fallbackUsed) } });
+  logMemory('analysis end');
   res.status(202).json({ inspection: inspectionResponse(fetchInspection(inspection.id)), analysis: { state: ocr.state, message: 'Preliminary analysis completed and stored.', ocr, ocrOnlyExtraction: deterministicExtraction, extraction, aiExtraction: visionExtraction.diagnostics, visionExtraction: visionExtraction.diagnostics, assessment, productCondition } });
   } catch (error) {
     db.prepare('UPDATE inspections SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(recoveryState, inspection.id);
