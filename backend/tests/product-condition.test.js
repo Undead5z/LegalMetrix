@@ -9,6 +9,8 @@ const valid = evaluate([declaration('best_before', '25/12/2026')]);
 assert.equal(valid.productCondition, PRODUCT_CONDITION.VALID);
 const near = evaluate([declaration('best_before', '25/09/2026')]);
 assert.equal(near.productCondition, PRODUCT_CONDITION.NEAR_EXPIRY);
+const expiredTwoDigitYear = evaluate([declaration('best_before', '14/12/25')]);
+assert.equal(expiredTwoDigitYear.productCondition, PRODUCT_CONDITION.EXPIRED);
 const expired = evaluate([declaration('best_before', '01/09/2026')]);
 assert.equal(expired.productCondition, PRODUCT_CONDITION.EXPIRED);
 assert.match(expired.reason, /has passed/i);

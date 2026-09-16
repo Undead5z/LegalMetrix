@@ -27,10 +27,11 @@ function parseAbsoluteDate(value) {
   const text = String(value || '').trim();
   let match = text.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
   if (match) return utcDate(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  // LegalMetrix is deployed for Indian packaged goods, so a labelled numeric
-  // package date is interpreted as day/month/year. Two-digit years are rejected.
-  match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (match) return utcDate(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+  // LegalMetrix is deployed for Indian packaged goods, so labelled numeric
+  // package dates are interpreted as day/month/year. A two-digit package year
+  // is safely expanded to 20YY; this supports common label values such as 14/12/25.
+  match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/);
+  if (match) { const rawYear = Number(match[3]); const year = match[3].length === 2 ? 2000 + rawYear : rawYear; return utcDate(year, Number(match[2]) - 1, Number(match[1])); }
   match = text.match(/^(\d{1,2})\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{4})$/i);
   if (!match) return null;
   const month = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(match[2].slice(0, 3).toLowerCase());
