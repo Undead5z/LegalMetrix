@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const rootDir = path.resolve(__dirname, '../..');
-const defaultCorsOrigins = ['http://localhost:5173', 'https://legal-metrix.vercel.app'];
+const defaultCorsOrigins = ['http://localhost:5173'];
 
 module.exports = {
   rootDir,

@@ -1,4 +1,4 @@
-// Use a publicly reachable HTTPS backend URL for physical devices on any network. No localhost fallback is used because localhost points to the phone itself.
+// The LAN helper writes the PC's current IPv4 backend URL to mobile/.env. A phone must never use localhost.
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '');
 
 export async function request(path, { token, method = 'GET', body } = {}) {

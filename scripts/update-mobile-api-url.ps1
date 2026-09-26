@@ -28,4 +28,4 @@ if (-not $IPAddress) {
 $apiUrl = "http://${IPAddress}:$BackendPort/api"
 Set-Content -Path $mobileEnv -Value "EXPO_PUBLIC_API_URL=$apiUrl" -Encoding utf8
 Write-Host "Mobile API URL updated: $apiUrl" -ForegroundColor Green
-Write-Host 'Restart Expo with: cd mobile; npx expo start --clear' -ForegroundColor Yellow
+Write-Host 'Restart Expo with: cd mobile; npx expo start --clear --lan' -ForegroundColor Yellow

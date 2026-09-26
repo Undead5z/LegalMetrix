@@ -12,7 +12,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Push-Location (Join-Path (Split-Path -Parent $scriptRoot) 'mobile')
 try {
-  npx expo start --clear
+  npx expo start --clear --lan
 } finally {
   Pop-Location
 }

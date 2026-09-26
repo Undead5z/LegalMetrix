@@ -73,7 +73,7 @@ Copy-Item mobile/.env.example mobile/.env
 
 cd backend; npm install; npm run dev
 cd ../web; npm install; npm run dev
-cd ../mobile; npm install; npx expo start -c --lan
+cd ../mobile; npm install; cd ..; .\scripts\start-mobile.ps1
 ```
 
 Backend health: `http://localhost:4000/api/health`; web: `http://localhost:5173`.
@@ -89,4 +89,4 @@ Development-only seeded accounts:
 | Master Admin | `admin@legalmetrix.local` | `Admin@123` |
 | Field Officer | `officer@legalmetrix.local` | `Officer@123` |
 
-Change/remove development credentials before deployment. SQLite initialization keeps bootstrap users and verified LegalMetrix rules; it does not generate synthetic product inspections.
+Development credentials are for local use only. SQLite initialization keeps bootstrap users and verified LegalMetrix rules; it does not generate synthetic product inspections.

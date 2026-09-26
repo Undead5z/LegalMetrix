@@ -7,7 +7,7 @@ const env = require('../config/env');
 const { resolveStoredPath, toStoredPath } = require('./storage.service');
 const { logMemory } = require('./memory-diagnostics.service');
 
-// Railway's 512 MB tier cannot afford Sharp's default cache or parallel workers.
+// Keep image-processing caches and worker concurrency bounded for local development machines.
 sharp.cache({ memory: 32, files: 0, items: 32 });
 sharp.concurrency(1);
 

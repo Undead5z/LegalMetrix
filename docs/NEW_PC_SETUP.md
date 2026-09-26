@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Install Git and **Node.js 22 LTS**. LegalMetrix uses `better-sqlite3` 13.x, which requires Node 22 or newer. Node 22 LTS is the tested local and Railway runtime.
+Install Git and **Node.js 22 LTS**. LegalMetrix uses `better-sqlite3` 13.x, which requires Node 22 or newer. Node 22 LTS is the tested local runtime.
 
 ```powershell
 winget install --id Git.Git -e
@@ -36,7 +36,7 @@ cd web; npm install; cd ..
 cd mobile; npm install; cd ..
 ```
 
-`backend/.env` defaults to port 4000 and host `0.0.0.0`. Keep the development `JWT_SECRET` placeholder only for local development; replace it with a long random secret before deployment. `AI_EXTRACTION_API_KEY` is optional and stays blank by default. It is backend-only: do not put API keys in `web/.env` or `mobile/.env`.
+`backend/.env` defaults to port 4000 and host `0.0.0.0`. Keep the development `JWT_SECRET` placeholder only for local development. `AI_EXTRACTION_API_KEY` is optional and stays blank by default. It is backend-only: do not put API keys in `web/.env` or `mobile/.env`.
 
 ## Database and development accounts
 
@@ -47,7 +47,7 @@ The backend automatically creates `backend/data/legalmetrix.db`, applies idempot
 | Master Admin | `admin@legalmetrix.local` | `Admin@123` |
 | Field Officer | `officer@legalmetrix.local` | `Officer@123` |
 
-Do not use these credentials in deployment.
+Use these credentials only for local development.
 
 ## Start the applications
 

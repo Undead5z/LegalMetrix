@@ -1,30 +1,61 @@
-# Mobile backend connectivity
+# Mobile LAN development
 
-## Network-independent physical-device setup
+LegalMetrix mobile development uses the backend running on this Windows PC. A physical phone cannot use `localhost`, because on a phone it means the phone itself.
 
-A phone cannot reach a backend that is listening only on a developer PC's local LAN when the phone changes Wi-Fi or uses mobile data. For network-independent use, deploy the LegalMetrix backend behind a publicly reachable HTTPS URL and set it in `mobile/.env`:
+## Start the local backend
+
+```powershell
+cd backend
+npm run dev
+```
+
+The backend listens on `0.0.0.0:4000` and the local health check is:
 
 ```text
-EXPO_PUBLIC_API_URL=https://your-legalmetrix-api.example.com/api
+http://localhost:4000/api/health
 ```
 
-Restart Expo after changing this value:
+## Refresh the phone API URL
+
+Keep the phone and PC on the same reachable Wi-Fi/Ethernet network. From the repository root:
 
 ```powershell
-cd mobile
-npx expo start --clear
+.\scripts\update-mobile-api-url.ps1
+Get-Content mobile/.env
 ```
 
-The phone and backend can then use different Wi-Fi networks or mobile data. Do not use `localhost` or `127.0.0.1`; on a phone they refer to the phone itself.
+The helper finds the active Windows IPv4 address and writes:
 
-## Local LAN development
+```text
+EXPO_PUBLIC_API_URL=http://<PC-LAN-IP>:4000/api
+```
 
-The existing LAN helper scripts remain available for local-only development:
+Do not commit `mobile/.env` and do not manually hardcode a previous LAN IP.
+
+## Verify from the phone
+
+Open this URL in the phone browser before opening Expo Go:
+
+```text
+http://<PC-LAN-IP>:4000/api/health
+```
+
+It should return `{"status":"ok",...}`.
+
+## Start Expo
 
 ```powershell
-./scripts/start-mobile.ps1
-# or
-./scripts/update-mobile-api-url.ps1
+.\scripts\start-mobile.ps1
 ```
 
-They intentionally use the current PC LAN address and therefore require the phone and PC to be on a reachable local network. They are not a substitute for a deployed HTTPS backend.
+The script refreshes `mobile/.env` and starts Expo with `--lan`. Scan the new QR code in Expo Go.
+
+## Firewall troubleshooting
+
+If the phone browser cannot reach `/api/health`, allow port 4000 for the active network profile from an elevated PowerShell:
+
+```powershell
+New-NetFirewallRule -DisplayName 'LegalMetrix backend LAN' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 4000 -Profile Private
+```
+
+For a Windows network classified as Public, use `-Profile Public` instead.
